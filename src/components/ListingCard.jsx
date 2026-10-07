@@ -27,7 +27,8 @@ export function StatoRiga({ a, tipo }) {
   );
 }
 
-export function ListingInfo({ a, tipo, compatta = false }) {
+// anteprima = true: solo tipologia, costi, posizione, genere (usata nelle card)
+export function ListingInfo({ a, tipo, anteprima = false }) {
   const cerco = tipo === ROOMMATES && a.roommateType === "cerco";
 
   const prezzo = cerco ? (
@@ -53,11 +54,26 @@ export function ListingInfo({ a, tipo, compatta = false }) {
     </p>
   );
 
-  if (compatta) {
+  const genere = (
+    <p>
+      {a.genderPreference === "Solo ragazze" && <>🩷 Genere: Solo ragazze</>}
+      {a.genderPreference === "Solo ragazzi" && <>💙 Genere: Solo ragazzi</>}
+      {a.genderPreference === "Indifferente" && <>🤍 Genere: Indifferente</>}
+    </p>
+  );
+
+  const deposito = a.deposit > 0 && <p>🔒 Deposito cauzionale: € {a.deposit}</p>;
+
+  if (anteprima) {
     return (
-      <div className="info">
+      <div className="info info--anteprima">
+        <p>
+          🏠 {cerco ? "Cerco" : "Tipologia"}: {a.propertyType}
+        </p>
         {prezzo}
+        {deposito}
         {posizione}
+        {genere}
       </div>
     );
   }
@@ -72,7 +88,7 @@ export function ListingInfo({ a, tipo, compatta = false }) {
 
       {prezzo}
 
-      {a.deposit > 0 && <p>🔒 Deposito cauzionale: € {a.deposit}</p>}
+      {deposito}
 
       <p>
         📅 {cerco ? "Cerco da" : "Disponibile dal"} {a.availableFrom}
@@ -84,11 +100,7 @@ export function ListingInfo({ a, tipo, compatta = false }) {
 
       {posizione}
 
-      <p>
-        {a.genderPreference === "Solo ragazze" && <>🩷 Genere: Solo ragazze</>}
-        {a.genderPreference === "Solo ragazzi" && <>💙 Genere: Solo ragazzi</>}
-        {a.genderPreference === "Indifferente" && <>🤍 Genere: Indifferente</>}
-      </p>
+      {genere}
 
       <p>
         {a.occupationPreference === "Solo studenti" && <>🎓 Solo studenti</>}
@@ -120,28 +132,30 @@ function ListingCard({ annuncio: a, tipo, compatta = false, children }) {
         if (e.key === "Enter" && e.target === e.currentTarget) apri();
       }}
     >
-      <div className="card__foto">
-        {a.photos?.[0] ? (
-          <img src={a.photos[0]} alt={a.title} loading="lazy" />
-        ) : (
-          <div className="card__foto-vuota">🏠</div>
-        )}
-        {a.photos?.length > 1 && (
-          <span className="card__conteggio">📷 {a.photos.length}</span>
-        )}
+      <div className="card__riga">
+        <div className="card__foto">
+          {a.photos?.[0] ? (
+            <img src={a.photos[0]} alt={a.title} loading="lazy" />
+          ) : (
+            <div className="card__foto-vuota">🏠</div>
+          )}
+          {a.photos?.length > 1 && (
+            <span className="card__conteggio">📷 {a.photos.length}</span>
+          )}
+        </div>
+
+        <div className="card__corpo">
+          {!compatta && <StatoRiga a={a} tipo={tipo} />}
+          <h3 className="card__titolo">{a.title}</h3>
+          <ListingInfo a={a} tipo={tipo} anteprima />
+        </div>
       </div>
 
-      <div className="card__corpo">
-        {!compatta && <StatoRiga a={a} tipo={tipo} />}
-        <h3 className="card__titolo">{a.title}</h3>
-        <ListingInfo a={a} tipo={tipo} compatta={compatta} />
-
-        {children && (
-          <div className="card__azioni" onClick={(e) => e.stopPropagation()}>
-            {children}
-          </div>
-        )}
-      </div>
+      {children && (
+        <div className="card__azioni" onClick={(e) => e.stopPropagation()}>
+          {children}
+        </div>
+      )}
     </article>
   );
 }
