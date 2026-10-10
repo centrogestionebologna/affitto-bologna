@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 
 import {
   ROOMMATES,
+  chiSono,
   percorsoDettaglio,
   totaleMensile,
 } from "../utils/helpers";
@@ -30,6 +31,11 @@ export function StatoRiga({ a, tipo }) {
 // anteprima = true: solo tipologia, costi, posizione, genere (usata nelle card)
 export function ListingInfo({ a, tipo, anteprima = false }) {
   const cerco = tipo === ROOMMATES && a.roommateType === "cerco";
+  const tipologie = a.propertyTypes?.length
+    ? a.propertyTypes.join(", ")
+    : a.propertyType;
+  const nuovoCerco = cerco && Boolean(a.selfInfo);
+  const righeChiSono = cerco ? chiSono(a) : [];
 
   const prezzo = cerco ? (
     <p className="info__prezzo">
@@ -68,7 +74,7 @@ export function ListingInfo({ a, tipo, anteprima = false }) {
     return (
       <div className="info info--anteprima">
         <p>
-          🏠 {cerco ? "Cerco" : "Tipologia"}: {a.propertyType}
+          🏠 {cerco ? "Cerco" : "Tipologia"}: {tipologie}
         </p>
         {prezzo}
         {deposito}
@@ -81,7 +87,7 @@ export function ListingInfo({ a, tipo, anteprima = false }) {
   return (
     <div className="info">
       <p>
-        🏠 {cerco ? "Cerco" : "Tipologia"}: {a.propertyType}
+        🏠 {cerco ? "Cerco" : "Tipologia"}: {tipologie}
       </p>
 
       <p className="info__desc">{a.description}</p>
@@ -102,25 +108,32 @@ export function ListingInfo({ a, tipo, anteprima = false }) {
 
       {genere}
 
-      <p>
-        {a.occupationPreference === "Solo studenti" && <>🎓 Solo studenti</>}
-        {a.occupationPreference === "Solo lavoratori" && <>💼 Solo lavoratori</>}
-        {a.occupationPreference === "Studenti e lavoratori" && (
-          <>🎓💼 Studenti e lavoratori</>
-        )}
-      </p>
+      {nuovoCerco ? (
+        righeChiSono.length > 0 && <p>🙋 Chi sono: {righeChiSono.join(" • ")}</p>
+      ) : (
+        <>
+          <p>
+            {a.occupationPreference === "Solo studenti" && <>🎓 Solo studenti</>}
+            {a.occupationPreference === "Solo lavoratori" && <>💼 Solo lavoratori</>}
+            {a.occupationPreference === "Studenti e lavoratori" && (
+              <>🎓💼 Studenti e lavoratori</>
+            )}
+          </p>
 
-      <p>{a.petsAllowed ? "🐶 Animali ammessi" : "🚫 Animali non ammessi"}</p>
+          <p>{a.petsAllowed ? "🐶 Animali ammessi" : "🚫 Animali non ammessi"}</p>
 
-      <p>{a.smokersAllowed ? "🚬 Fumatori ammessi" : "🚭 Non fumatori"}</p>
+          <p>{a.smokersAllowed ? "🚬 Fumatori ammessi" : "🚭 Non fumatori"}</p>
+        </>
+      )}
     </div>
   );
 }
 
-// children = pulsanti azione (salva, contatta, elimina...). Il click sulla card apre il dettaglio.
+// children = pulsanti azione. Il click sulla card apre il dettaglio.
 function ListingCard({ annuncio: a, tipo, compatta = false, children }) {
   const navigate = useNavigate();
   const apri = () => navigate(percorsoDettaglio(tipo, a.id));
+  const foto = a.photos?.[0];
 
   return (
     <article
@@ -133,16 +146,14 @@ function ListingCard({ annuncio: a, tipo, compatta = false, children }) {
       }}
     >
       <div className="card__riga">
-        <div className="card__foto">
-          {a.photos?.[0] ? (
-            <img src={a.photos[0]} alt={a.title} loading="lazy" />
-          ) : (
-            <div className="card__foto-vuota">🏠</div>
-          )}
-          {a.photos?.length > 1 && (
-            <span className="card__conteggio">📷 {a.photos.length}</span>
-          )}
-        </div>
+        {foto && (
+          <div className="card__foto">
+            <img src={foto} alt={a.title} loading="lazy" />
+            {a.photos.length > 1 && (
+              <span className="card__conteggio">📷 {a.photos.length}</span>
+            )}
+          </div>
+        )}
 
         <div className="card__corpo">
           {!compatta && <StatoRiga a={a} tipo={tipo} />}

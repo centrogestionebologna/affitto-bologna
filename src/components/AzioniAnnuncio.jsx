@@ -37,9 +37,74 @@ function SalvaButton({ salvato, onToggle }) {
   );
 }
 
-function ContattaButton({ annuncio, tipo }) {
-  const [stato, setStato] = useState("caricamento");
+function ContattaModal({ annuncio, tipo, chiudi, inviata }) {
+  const [intro, setIntro] = useState("");
+  const [invio, setInvio] = useState(false);
   const [errore, setErrore] = useState("");
+
+  const invia = async (e) => {
+    e.preventDefault();
+    const testo = intro.trim();
+
+    if (testo.length < 20) {
+      return setErrore("Scrivi almeno 20 caratteri per presentarti.");
+    }
+
+    setInvio(true);
+    setErrore("");
+
+    try {
+      await inviaRichiestaContatto(annuncio, tipo, testo);
+      inviata();
+      chiudi();
+    } catch (error) {
+      console.error(error);
+      setErrore("Richiesta non inviata, riprova.");
+      setInvio(false);
+    }
+  };
+
+  return createPortal(
+    <div className="modal" role="dialog" aria-modal="true" onClick={chiudi}>
+      <div className="modal__box" onClick={(e) => e.stopPropagation()}>
+        <form onSubmit={invia}>
+          <h3>📨 Richiesta di contatto</h3>
+          <p className="tenue">
+            Presentati al proprietario. Se approva la richiesta, riceverà il tuo
+            contatto; riceverai una notifica con la sua decisione.
+          </p>
+
+          <div className="campo">
+            <label htmlFor="intro-contatto">Il tuo messaggio</label>
+            <textarea
+              id="intro-contatto"
+              value={intro}
+              maxLength={600}
+              placeholder="Ciao! Sono... studio/lavoro a... cerco una stanza da..."
+              onChange={(e) => setIntro(e.target.value)}
+            />
+          </div>
+
+          {errore && <p className="alert alert--errore">{errore}</p>}
+
+          <div className="form-azioni">
+            <button type="submit" className="btn btn--primario" disabled={invio}>
+              {invio ? "Invio..." : "Invia richiesta"}
+            </button>
+            <button type="button" className="btn btn--sec" onClick={chiudi}>
+              Annulla
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function ContattaButton({ annuncio, tipo }) {
+  const [stato, setStato] = useState("caricamento"); // libero | pending | approved | rejected
+  const [modale, setModale] = useState(false);
 
   useEffect(() => {
     let attivo = true;
@@ -47,7 +112,7 @@ function ContattaButton({ annuncio, tipo }) {
 
     getDoc(doc(db, "contactRequests", id))
       .then((snap) => {
-        if (attivo) setStato(snap.exists() ? "inviata" : "libero");
+        if (attivo) setStato(snap.exists() ? snap.data().status || "pending" : "libero");
       })
       .catch(() => {
         if (attivo) setStato("libero");
@@ -58,17 +123,12 @@ function ContattaButton({ annuncio, tipo }) {
     };
   }, [annuncio.id]);
 
-  const invia = async () => {
-    setErrore("");
-    setStato("invio");
-    try {
-      await inviaRichiestaContatto(annuncio, tipo);
-      setStato("inviata");
-    } catch (error) {
-      console.error(error);
-      setErrore("Richiesta non inviata, riprova.");
-      setStato("libero");
-    }
+  const etichette = {
+    caricamento: "📨 Contatta",
+    libero: "📨 Contatta",
+    pending: "⏳ Richiesta inviata",
+    approved: "✅ Richiesta approvata",
+    rejected: "❌ Richiesta non accettata",
   };
 
   return (
@@ -76,16 +136,20 @@ function ContattaButton({ annuncio, tipo }) {
       <button
         type="button"
         className="btn btn--primario"
-        onClick={invia}
+        onClick={() => setModale(true)}
         disabled={stato !== "libero"}
       >
-        {stato === "inviata"
-          ? "✅ Richiesta inviata"
-          : stato === "invio"
-          ? "Invio..."
-          : "📨 Contatta"}
+        {etichette[stato] || etichette.pending}
       </button>
-      {errore && <span className="alert alert--errore">{errore}</span>}
+
+      {modale && (
+        <ContattaModal
+          annuncio={annuncio}
+          tipo={tipo}
+          chiudi={() => setModale(false)}
+          inviata={() => setStato("pending")}
+        />
+      )}
     </>
   );
 }

@@ -12,8 +12,9 @@ import {
 
 import { auth, db } from "../firebase";
 import PageContainer from "../components/PageContainer";
-import ListingCard from "../components/ListingCard.jsx";
+import ListingCard from "../components/ListingCard";
 import AnnuncioForm from "../components/AnnuncioForm";
+import { decidiRichiesta, pubblicaInChat } from "../services/annunci";
 import {
   PROPERTIES,
   ROOMMATES,
@@ -24,6 +25,12 @@ import {
 const ordina = (lista) =>
   [...lista].sort((a, b) => secondi(b.createdAt) - secondi(a.createdAt));
 
+const ETICHETTE_STATO = {
+  pending: "⏳ In attesa",
+  approved: "✅ Approvata",
+  rejected: "❌ Non accettata",
+};
+
 function MieiAnnunci() {
   // vista: "" | "scelta" | "casa" | "coinquilini" | "offro" | "cerco" | "modifica"
   const [vista, setVista] = useState("");
@@ -31,27 +38,31 @@ function MieiAnnunci() {
 
   const [immobili, setImmobili] = useState([]);
   const [coinquilini, setCoinquilini] = useState([]);
-  const [richieste, setRichieste] = useState([]);
+  const [ricevute, setRicevute] = useState([]);
+  const [inviate, setInviate] = useState([]);
 
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState("");
   const [feedback, setFeedback] = useState("");
+  const [inElaborazione, setInElaborazione] = useState("");
 
   const carica = useCallback(async () => {
     const uid = auth.currentUser.uid;
 
     try {
-      const [a, b, c] = await Promise.all([
+      const [a, b, c, d] = await Promise.all([
         getDocs(query(collection(db, PROPERTIES), where("ownerId", "==", uid))),
         getDocs(query(collection(db, ROOMMATES), where("ownerId", "==", uid))),
         getDocs(query(collection(db, "contactRequests"), where("toId", "==", uid))),
+        getDocs(query(collection(db, "contactRequests"), where("fromId", "==", uid))),
       ]);
 
-      const mappa = (snap) => snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const mappa = (snap) => snap.docs.map((x) => ({ id: x.id, ...x.data() }));
 
       setImmobili(ordina(mappa(a)));
       setCoinquilini(ordina(mappa(b)));
-      setRichieste(ordina(mappa(c)));
+      setRicevute(ordina(mappa(c)));
+      setInviate(ordina(mappa(d)));
       setErrore("");
     } catch (error) {
       console.error(error);
@@ -96,9 +107,12 @@ function MieiAnnunci() {
     }
   };
 
-  const cambiaStato = async (id, tipo, nuovoStato) => {
+  const cambiaStato = async (annuncio, tipo, nuovoStato) => {
     try {
-      await updateDoc(doc(db, tipo, id), { status: nuovoStato });
+      await updateDoc(doc(db, tipo, annuncio.id), { status: nuovoStato });
+      if (nuovoStato === "active") {
+        await pubblicaInChat(annuncio, tipo, "reactivated");
+      }
       carica();
     } catch (error) {
       console.error(error);
@@ -106,10 +120,34 @@ function MieiAnnunci() {
     }
   };
 
+  const decidi = async (richiesta, approva) => {
+    setInElaborazione(richiesta.id);
+    try {
+      await decidiRichiesta(richiesta, approva);
+      setRicevute((lista) =>
+        lista.map((r) =>
+          r.id === richiesta.id
+            ? { ...r, status: approva ? "approved" : "rejected" }
+            : r
+        )
+      );
+      setFeedback(
+        approva
+          ? "Richiesta approvata: ora vedi il contatto."
+          : "Richiesta rifiutata."
+      );
+    } catch (error) {
+      console.error(error);
+      setErrore("Operazione non riuscita, riprova.");
+    } finally {
+      setInElaborazione("");
+    }
+  };
+
   const rimuoviRichiesta = async (id) => {
     try {
       await deleteDoc(doc(db, "contactRequests", id));
-      setRichieste((r) => r.filter((x) => x.id !== id));
+      setRicevute((r) => r.filter((x) => x.id !== id));
     } catch (error) {
       console.error(error);
       setErrore("Impossibile rimuovere la richiesta.");
@@ -121,6 +159,8 @@ function MieiAnnunci() {
     setVista("modifica");
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
+
+  const inAttesa = ricevute.filter((r) => (r.status || "pending") === "pending");
 
   const renderLista = (lista, tipo) =>
     lista.length === 0 ? (
@@ -141,7 +181,7 @@ function MieiAnnunci() {
               <button
                 type="button"
                 className="btn btn--sec"
-                onClick={() => cambiaStato(a.id, tipo, "inactive")}
+                onClick={() => cambiaStato(a, tipo, "inactive")}
               >
                 🔴 Non disponibile
               </button>
@@ -149,7 +189,7 @@ function MieiAnnunci() {
               <button
                 type="button"
                 className="btn btn--sec"
-                onClick={() => cambiaStato(a.id, tipo, "active")}
+                onClick={() => cambiaStato(a, tipo, "active")}
               >
                 🟢 Disponibile
               </button>
@@ -249,43 +289,112 @@ function MieiAnnunci() {
 
       <section className="sezione">
         <h2 className="sezione__titolo">
-          📨 Richieste di contatto ({richieste.length})
+          📨 Richieste di contatto ({inAttesa.length} in attesa)
         </h2>
 
-        {caricamento ? null : richieste.length === 0 ? (
+        {caricamento ? null : ricevute.length === 0 ? (
           <p className="tenue">Nessuna richiesta ricevuta.</p>
         ) : (
           <ul className="richieste">
-            {richieste.map((r) => (
-              <li className="scheda richiesta" key={r.id}>
-                <div>
-                  <strong>
-                    <Link to={`/utente/${r.fromId}`}>{r.fromName || "Utente"}</Link>
-                  </strong>{" "}
-                  è interessato a{" "}
-                  <Link to={percorsoDettaglio(r.listingType, r.listingId)}>
-                    {r.listingTitle || "il tuo annuncio"}
-                  </Link>
-                  <br />
-                  {r.fromEmail && (
-                    <a href={`mailto:${r.fromEmail}`}>✉ {r.fromEmail}</a>
-                  )}
-                  {r.createdAt?.toDate && (
-                    <small className="tenue">
-                      {" · "}
-                      {r.createdAt.toDate().toLocaleDateString("it-IT")}
-                    </small>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  className="btn btn--sec btn--piccolo"
-                  onClick={() => rimuoviRichiesta(r.id)}
-                >
-                  Rimuovi
-                </button>
-              </li>
-            ))}
+            {ricevute.map((r) => {
+              const stato = r.status || "pending";
+              return (
+                <li className="scheda richiesta" key={r.id}>
+                  <div className="richiesta__corpo">
+                    <strong>
+                      <Link to={`/utente/${r.fromId}`}>{r.fromName || "Utente"}</Link>
+                    </strong>{" "}
+                    per{" "}
+                    <Link to={percorsoDettaglio(r.listingType, r.listingId)}>
+                      {r.listingTitle || "il tuo annuncio"}
+                    </Link>{" "}
+                    <span className={`badge badge--${stato}`}>
+                      {ETICHETTE_STATO[stato]}
+                    </span>
+                    {r.intro && <p className="richiesta__intro">“{r.intro}”</p>}
+
+                    {stato === "approved" && (
+                      <p className="richiesta__contatto">
+                        {r.fromPhone && (
+                          <>
+                            📞 <a href={`tel:${r.fromPhone}`}>{r.fromPhone}</a>
+                          </>
+                        )}
+                        {r.fromEmail && (
+                          <>
+                            {r.fromPhone ? " · " : ""}✉{" "}
+                            <a href={`mailto:${r.fromEmail}`}>{r.fromEmail}</a>
+                          </>
+                        )}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="form-azioni">
+                    {stato === "pending" ? (
+                      <>
+                        <button
+                          type="button"
+                          className="btn btn--primario btn--piccolo"
+                          disabled={inElaborazione === r.id}
+                          onClick={() => decidi(r, true)}
+                        >
+                          ✅ Approva
+                        </button>
+                        <button
+                          type="button"
+                          className="btn btn--pericolo btn--piccolo"
+                          disabled={inElaborazione === r.id}
+                          onClick={() => decidi(r, false)}
+                        >
+                          ❌ Rifiuta
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn--sec btn--piccolo"
+                        onClick={() => rimuoviRichiesta(r.id)}
+                      >
+                        Rimuovi
+                      </button>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </section>
+
+      <section className="sezione">
+        <h2 className="sezione__titolo">📤 Richieste inviate ({inviate.length})</h2>
+
+        {caricamento ? null : inviate.length === 0 ? (
+          <p className="tenue">Non hai ancora inviato richieste.</p>
+        ) : (
+          <ul className="richieste">
+            {inviate.map((r) => {
+              const stato = r.status || "pending";
+              return (
+                <li className="scheda richiesta" key={r.id}>
+                  <div className="richiesta__corpo">
+                    <Link to={percorsoDettaglio(r.listingType, r.listingId)}>
+                      {r.listingTitle || "Annuncio"}
+                    </Link>{" "}
+                    <span className={`badge badge--${stato}`}>
+                      {ETICHETTE_STATO[stato]}
+                    </span>
+                    {stato === "approved" && (
+                      <p className="tenue">
+                        Il proprietario ha ricevuto il tuo contatto e ti
+                        scriverà o chiamerà.
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

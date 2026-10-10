@@ -91,7 +91,12 @@ export function filtraEOrdina(lista, f) {
       return false;
     if (f.prezzoMax !== "" && Number(a.monthlyPrice) > Number(f.prezzoMax))
       return false;
-    if (f.tipologia && a.propertyType !== f.tipologia) return false;
+    if (f.tipologia) {
+      const tipologie = a.propertyTypes?.length
+        ? a.propertyTypes
+        : [a.propertyType];
+      if (!tipologie.includes(f.tipologia)) return false;
+    }
     if (f.animali && !a.petsAllowed) return false;
     if (f.fumatori && !a.smokersAllowed) return false;
     if (
@@ -145,4 +150,60 @@ export function punteggioSuggerimento(candidato, riferimenti) {
       return s;
     })
   );
+}
+
+export const GENERE_PERSONA = ["Ragazza", "Ragazzo", "Altro"];
+
+export const OCCUPAZIONE_PERSONA = [
+  "Studente",
+  "Lavoratore",
+  "Studente lavoratore",
+];
+
+// Riga "Chi sono" di un annuncio "cerco posto letto", senza i campi nascosti
+export function chiSono(a) {
+  const s = a.selfInfo;
+  if (!s) return [];
+  const nascosti = a.hiddenFields || [];
+  const righe = [];
+
+  if (s.gender && !nascosti.includes("gender")) {
+    righe.push(
+      { Ragazza: "🩷 Ragazza", Ragazzo: "💙 Ragazzo", Altro: "🤍 Altro" }[
+        s.gender
+      ] || s.gender
+    );
+  }
+  if (s.occupation && !nascosti.includes("occupation")) {
+    righe.push(
+      {
+        Studente: "🎓 Studente",
+        Lavoratore: "💼 Lavoratore",
+        "Studente lavoratore": "🎓💼 Studente lavoratore",
+      }[s.occupation] || s.occupation
+    );
+  }
+  if (!nascosti.includes("smoker")) {
+    righe.push(s.smoker ? "🚬 Fumatore" : "🚭 Non fumatore");
+  }
+  if (!nascosti.includes("pets")) {
+    righe.push(s.pets ? "🐶 Ho animali" : "🚫 Nessun animale");
+  }
+  return righe;
+}
+
+// Testo sintetico per i messaggi di servizio nella chat
+export function riepilogoChat(a, tipo) {
+  const cerco = tipo === ROOMMATES && a.roommateType === "cerco";
+  const prezzo = cerco
+    ? `budget € ${a.monthlyPrice}`
+    : `€ ${totaleMensile(a)}/mese`;
+  const tipologia =
+    a.propertyTypes?.length > 1
+      ? `${a.propertyTypes.length} tipologie`
+      : a.propertyType;
+
+  return [cerco ? "Cerco posto letto" : tipologia, prezzo, a.zone]
+    .filter(Boolean)
+    .join(" • ");
 }

@@ -5,10 +5,10 @@ import { doc, getDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import PageContainer from "../components/PageContainer";
 import PhotoGallery from "../components/PhotoGallery";
-import { ListingInfo, StatoRiga } from "../components/ListingCard.jsx";
+import { ListingInfo, StatoRiga } from "../components/ListingCard";
 import AzioniAnnuncio from "../components/AzioniAnnuncio";
 import Suggerimenti from "../components/Suggerimenti";
-import { ValutazioneSintetica } from "../components/Recensioni";
+import Recensioni, { ValutazioneSintetica } from "../components/Recensioni";
 import useFavorites from "../hooks/useFavorites";
 import { PROPERTIES } from "../utils/helpers";
 
@@ -19,7 +19,8 @@ function DettaglioAnnuncio({ tipo = PROPERTIES }) {
   const { favIds, toggle } = useFavorites();
 
   const [annuncio, setAnnuncio] = useState(null);
-  const [proprietario, setProprietario] = useState(null);
+  const [segnalazioni, setSegnalazioni] = useState(0);
+  const [approvata, setApprovata] = useState(false);
   const [caricamento, setCaricamento] = useState(true);
   const [errore, setErrore] = useState("");
 
@@ -43,8 +44,13 @@ function DettaglioAnnuncio({ tipo = PROPERTIES }) {
         setAnnuncio(dati);
 
         try {
-          const utente = await getDoc(doc(db, "users", dati.ownerId));
-          if (attivo && utente.exists()) setProprietario(utente.data());
+          const [proprietario, richiesta] = await Promise.all([
+            getDoc(doc(db, "users", dati.ownerId)),
+            getDoc(doc(db, "contactRequests", `${auth.currentUser.uid}_${dati.id}`)),
+          ]);
+          if (!attivo) return;
+          setSegnalazioni(proprietario.data()?.reportsCount || 0);
+          setApprovata(richiesta.exists() && richiesta.data().status === "approved");
         } catch (error) {
           console.error(error);
         }
@@ -85,9 +91,7 @@ function DettaglioAnnuncio({ tipo = PROPERTIES }) {
   }
 
   const mio = annuncio.ownerId === auth.currentUser.uid;
-  const nomeProprietario = proprietario
-    ? `${proprietario.firstName || ""} ${proprietario.lastName || ""}`.trim()
-    : "";
+  const haFoto = annuncio.photos?.length > 0;
 
   return (
     <PageContainer>
@@ -95,8 +99,8 @@ function DettaglioAnnuncio({ tipo = PROPERTIES }) {
         ← Indietro
       </button>
 
-      <div className="dettaglio">
-        <PhotoGallery photos={annuncio.photos || []} alt={annuncio.title} />
+      <div className={"dettaglio" + (haFoto ? "" : " dettaglio--senza-foto")}>
+        {haFoto && <PhotoGallery photos={annuncio.photos} alt={annuncio.title} />}
 
         <div className="dettaglio__corpo">
           <StatoRiga a={annuncio} tipo={tipo} />
@@ -105,12 +109,9 @@ function DettaglioAnnuncio({ tipo = PROPERTIES }) {
           <ListingInfo a={annuncio} tipo={tipo} />
 
           <div className="scheda proprietario">
-            <h3>Pubblicato da</h3>
+            <h3>Affidabilità di chi pubblica</h3>
             <p>
-              <Link to={`/utente/${annuncio.ownerId}`}>
-                {nomeProprietario || "Utente"}
-              </Link>
-              {proprietario?.verified && " ✅"}
+              🚩 Segnalazioni ricevute: <strong>{segnalazioni}</strong>
             </p>
             <p>
               <ValutazioneSintetica userId={annuncio.ownerId} />
@@ -133,6 +134,8 @@ function DettaglioAnnuncio({ tipo = PROPERTIES }) {
           </div>
         </div>
       </div>
+
+      <Recensioni userId={annuncio.ownerId} puoiRecensire={approvata} />
 
       {tipo === PROPERTIES && (
         <Suggerimenti referenti={[annuncio]} esclusi={[annuncio.id]} />

@@ -14,7 +14,7 @@ import { auth, db } from "../firebase";
 import PageContainer from "../components/PageContainer";
 import { percorsoDettaglio, secondi } from "../utils/helpers";
 
-const ICONE = { contact: "📨", favorite: "❤️", edit: "✏️" };
+const ICONE = { contact: "📨", decision: "✅", favorite: "❤️", edit: "✏️" };
 
 function Notifiche() {
   const navigate = useNavigate();
@@ -55,10 +55,10 @@ function Notifiche() {
         console.error(error);
       }
     }
-    if (n.listingId && n.listingType) {
-      navigate(percorsoDettaglio(n.listingType, n.listingId));
-    } else if (n.type === "contact") {
+    if (n.type === "contact") {
       navigate("/annunci");
+    } else if (n.listingId && n.listingType) {
+      navigate(percorsoDettaglio(n.listingType, n.listingId));
     }
   };
 

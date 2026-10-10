@@ -13,8 +13,7 @@ function Login() {
     setErrore("");
 
     try {
-      const provider = new GoogleAuthProvider();
-      const result = await signInWithPopup(auth, provider);
+      const result = await signInWithPopup(auth, new GoogleAuthProvider());
       const user = result.user;
 
       const userRef = doc(db, "users", user.uid);
@@ -24,8 +23,6 @@ function Login() {
         await setDoc(userRef, {
           firstName: user.displayName?.split(" ")[0] || "",
           lastName: user.displayName?.split(" ").slice(1).join(" ") || "",
-          email: user.email,
-          phone: "",
           role: "user",
           accountType: "homeSeeker",
           verified: false,
@@ -33,8 +30,16 @@ function Login() {
           likes: 0,
           dislikes: 0,
           banned: false,
+          chatMuted: false,
+          onboardingCompleted: false,
           memberSince: serverTimestamp(),
         });
+
+        await setDoc(
+          doc(db, "userContacts", user.uid),
+          { phone: "", email: user.email || "" },
+          { merge: true }
+        );
       }
     } catch (error) {
       console.error(error);
