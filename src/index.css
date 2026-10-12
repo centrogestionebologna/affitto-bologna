@@ -1904,3 +1904,32 @@ html.chat-attiva body {
     min-width: 26px;
   }
 }
+
+.menu-navigazione__etichetta {
+  flex: 1;
+  min-width: 0;
+}
+
+.menu-navigazione__contatore {
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+
+  min-width: 24px;
+  height: 24px;
+  padding: 0 7px;
+
+  border-radius: 999px;
+  background: var(--fav);
+  color: #fff;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.menu-navigazione__voce.attiva
+  .menu-navigazione__contatore {
+  background: #fff;
+  color: var(--fav);
+}

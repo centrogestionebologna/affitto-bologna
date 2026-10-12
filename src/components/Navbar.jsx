@@ -102,22 +102,33 @@ export function MenuNavigazione({ className = "" }) {
         >
           {voci.map((voce) => (
             <NavLink
-              key={voce.to}
-              to={voce.to}
-              className={({ isActive }) =>
-                `menu-navigazione__voce${isActive ? " attiva" : ""}`
-              }
-              onClick={() => setAperto(false)}
-            >
-              <span
-                className="menu-navigazione__icona"
-                aria-hidden="true"
-              >
-                {voce.icona}
-              </span>
+  key={voce.to}
+  to={voce.to}
+  className={({ isActive }) =>
+    `menu-navigazione__voce${isActive ? " attiva" : ""}`
+  }
+  onClick={() => setAperto(false)}
+>
+  <span
+    className="menu-navigazione__icona"
+    aria-hidden="true"
+  >
+    {voce.icona}
+  </span>
 
-              <span>{voce.label}</span>
-            </NavLink>
+  <span className="menu-navigazione__etichetta">
+    {voce.label}
+  </span>
+
+  {voce.to === "/notifiche" && nonLette > 0 && (
+    <span
+      className="menu-navigazione__contatore"
+      aria-label={`${nonLette} notifiche non lette`}
+    >
+      {nonLette > 99 ? "99+" : nonLette}
+    </span>
+  )}
+</NavLink>
           ))}
         </nav>
       )}

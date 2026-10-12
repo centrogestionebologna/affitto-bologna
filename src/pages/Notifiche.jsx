@@ -14,7 +14,33 @@ import { auth, db } from "../firebase";
 import PageContainer from "../components/PageContainer";
 import { percorsoDettaglio, secondi } from "../utils/helpers";
 
-const ICONE = { contact: "📨", decision: "✅", favorite: "❤️", edit: "✏️" };
+const ICONE = {
+  contact: "📨",
+  favorite: "❤️",
+  edit: "✏️",
+};
+
+const iconaNotifica = (notifica) => {
+  if (notifica.type === "decision") {
+    if (notifica.decision === "rejected") return "❌";
+    if (notifica.decision === "approved") return "✅";
+
+    // Compatibilità con le vecchie notifiche,
+    // create prima dell'aggiunta del campo "decision".
+    const messaggio = String(notifica.message || "").toLowerCase();
+
+    if (
+      messaggio.includes("non è stata accettata") ||
+      messaggio.includes("rifiutata")
+    ) {
+      return "❌";
+    }
+
+    return "✅";
+  }
+
+  return ICONE[notifica.type] || "🔔";
+};
 
 function Notifiche() {
   const navigate = useNavigate();
@@ -111,8 +137,9 @@ function Notifiche() {
                   className={"notifica" + (n.read ? "" : " notifica--nuova")}
                   onClick={() => apri(n)}
                 >
-                  <span className="notifica__icona">{ICONE[n.type] || "🔔"}</span>
-                  <span className="notifica__testo">
+<span className="notifica__icona">
+  {iconaNotifica(n)}
+</span>                  <span className="notifica__testo">
                     {n.message}
                     {n.createdAt?.toDate && (
                       <small className="tenue">

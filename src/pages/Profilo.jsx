@@ -60,14 +60,15 @@ function Profilo() {
         />
         {messaggio && <p className="alert alert--ok">{messaggio}</p>}
 
-        <div className="form-azioni">
-          <Link to="/preferiti" className="btn btn--sec">
-            ❤️ I miei preferiti
-          </Link>
-          <button type="button" className="btn btn--sec" onClick={() => signOut(auth)}>
-            Logout
-          </button>
-        </div>
+<div className="form-azioni">
+  <button
+    type="button"
+    className="btn btn--sec"
+    onClick={() => signOut(auth)}
+  >
+    Logout
+  </button>
+</div>
       </div>
 
       <Recensioni userId={auth.currentUser.uid} puoiRecensire={false} />

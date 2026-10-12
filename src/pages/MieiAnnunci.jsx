@@ -1,6 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
+  collection,
+  deleteDoc,
+  doc,
+  getDocs,
+  query,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+
+import { auth, db } from "../firebase";
+import PageContainer from "../components/PageContainer";
+import ListingCard from "../components/ListingCard";
+import AnnuncioForm from "../components/AnnuncioForm";
+import { decidiRichiesta, pubblicaInChat } from "../services/annunci";
+import {
   PROPERTIES,
   ROOMMATES,
   abbreviaNomeCompleto,
@@ -8,14 +23,10 @@ import {
   secondi,
 } from "../utils/helpers";
 
-import { auth, db } from "../firebase";
-import PageContainer from "../components/PageContainer";
-import ListingCard from "../components/ListingCard";
-import AnnuncioForm from "../components/AnnuncioForm";
-import { decidiRichiesta, pubblicaInChat } from "../services/annunci";
-
 const ordina = (lista) =>
-  [...lista].sort((a, b) => secondi(b.createdAt) - secondi(a.createdAt));
+  [...lista].sort(
+    (a, b) => secondi(b.createdAt) - secondi(a.createdAt)
+  );
 
 const ETICHETTE_STATO = {
   pending: "⏳ In attesa",
@@ -206,15 +217,21 @@ function MieiAnnunci() {
       {feedback && <p className="alert alert--ok">{feedback}</p>}
       {errore && <p className="alert alert--errore">{errore}</p>}
 
-      {!vista && (
-        <button
-          type="button"
-          className="btn btn--primario"
-          onClick={() => setVista("scelta")}
-        >
-          ➕ Nuovo Annuncio
-        </button>
-      )}
+{!vista && (
+  <div className="form-azioni miei-annunci__azioni-principali">
+    <button
+      type="button"
+      className="btn btn--primario"
+      onClick={() => setVista("scelta")}
+    >
+      ➕ Nuovo annuncio
+    </button>
+
+    <Link to="/preferiti" className="btn btn--sec">
+      ❤️ I miei preferiti
+    </Link>
+  </div>
+)}
 
       {vista === "scelta" && (
         <div className="scheda">

@@ -38,19 +38,21 @@ export async function creaNotifica({
   message,
   listingId = null,
   listingType = null,
+  decision = null,
 }) {
   if (!userId || userId === auth.currentUser.uid) return;
 
   try {
-    await addDoc(collection(db, "notifications"), {
-      userId,
-      type,
-      message,
-      listingId,
-      listingType,
-      read: false,
-      createdAt: serverTimestamp(),
-    });
+await addDoc(collection(db, "notifications"), {
+  userId,
+  type,
+  message,
+  listingId,
+  listingType,
+  decision,
+  read: false,
+  createdAt: serverTimestamp(),
+});
   } catch (error) {
     console.error("Notifica non creata", error);
   }
@@ -156,15 +158,16 @@ export async function decidiRichiesta(richiesta, approva) {
     decidedAt: serverTimestamp(),
   });
 
-  await creaNotifica({
-    userId: richiesta.fromId,
-    type: "decision",
-    message: approva
-      ? `La tua richiesta per "${richiesta.listingTitle}" è stata approvata: il proprietario ha ricevuto il tuo contatto`
-      : `La tua richiesta per "${richiesta.listingTitle}" non è stata accettata`,
-    listingId: richiesta.listingId,
-    listingType: richiesta.listingType,
-  });
+await creaNotifica({
+  userId: richiesta.fromId,
+  type: "decision",
+  decision: approva ? "approved" : "rejected",
+  message: approva
+    ? `La tua richiesta per "${richiesta.listingTitle}" è stata approvata: il proprietario ha ricevuto il tuo contatto`
+    : `La tua richiesta per "${richiesta.listingTitle}" non è stata accettata`,
+  listingId: richiesta.listingId,
+  listingType: richiesta.listingType,
+});
 }
 
 export async function inviaSegnalazione(annuncio, tipo, motivo, dettagli) {
