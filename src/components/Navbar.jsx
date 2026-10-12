@@ -6,9 +6,9 @@ import { auth, db } from "../firebase";
 import useUtente from "../hooks/useUtente";
 
 const VOCI = [
+  { to: "/chat", icona: "💬", label: "Chat" },
   { to: "/casa", icona: "🏠", label: "Casa" },
   { to: "/coinquilini", icona: "👥", label: "Coinquilini" },
-  { to: "/chat", icona: "💬", label: "Chat" },
   { to: "/annunci", icona: "📋", label: "Annunci" },
   { to: "/notifiche", icona: "🔔", label: "Notifiche", badge: true },
   { to: "/profilo", icona: "👤", label: "Profilo" },

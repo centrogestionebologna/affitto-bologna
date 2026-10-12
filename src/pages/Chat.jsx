@@ -13,7 +13,6 @@ import {
 } from "firebase/firestore";
 
 import { auth, db } from "../firebase";
-import PageContainer from "../components/PageContainer";
 import useUtente from "../hooks/useUtente";
 import { ROOMMATES, percorsoDettaglio } from "../utils/helpers";
 
@@ -51,9 +50,45 @@ function Chat() {
   const [testo, setTesto] = useState("");
   const [inviando, setInviando] = useState(false);
   const [errore, setErrore] = useState("");
+  const [tastiera, setTastiera] = useState(false);
 
   const listaRef = useRef(null);
   const staInFondo = useRef(true);
+  const inputFocus = useRef(false);
+  const baseline = useRef(window.innerHeight);
+  const aggiornaRef = useRef(null);
+
+  // Blocca lo scroll della pagina e segue l'area visibile (tastiera)
+  useEffect(() => {
+    const root = document.documentElement;
+    const vv = window.visualViewport;
+    root.classList.add("chat-attiva");
+
+    const aggiorna = () => {
+      const h = vv ? vv.height : window.innerHeight;
+      const t = vv ? vv.offsetTop : 0;
+      if (!inputFocus.current) baseline.current = Math.max(h, window.innerHeight);
+      root.style.setProperty("--vvh", `${h}px`);
+      root.style.setProperty("--vvt", `${t}px`);
+      setTastiera(inputFocus.current && h < baseline.current - 120);
+    };
+
+    aggiornaRef.current = aggiorna;
+    aggiorna();
+
+    vv?.addEventListener("resize", aggiorna);
+    vv?.addEventListener("scroll", aggiorna);
+    window.addEventListener("resize", aggiorna);
+
+    return () => {
+      root.classList.remove("chat-attiva");
+      root.style.removeProperty("--vvh");
+      root.style.removeProperty("--vvt");
+      vv?.removeEventListener("resize", aggiorna);
+      vv?.removeEventListener("scroll", aggiorna);
+      window.removeEventListener("resize", aggiorna);
+    };
+  }, []);
 
   useEffect(() => {
     const q = query(
@@ -91,6 +126,12 @@ function Chat() {
     const el = listaRef.current;
     if (el && staInFondo.current) el.scrollTop = el.scrollHeight;
   }, [messaggi]);
+
+  // Quando si apre/chiude la tastiera resta visibile l'ultimo messaggio
+  useEffect(() => {
+    const el = listaRef.current;
+    if (el && staInFondo.current) el.scrollTop = el.scrollHeight;
+  }, [tastiera]);
 
   const onScroll = () => {
     const el = listaRef.current;
@@ -147,134 +188,142 @@ function Chat() {
   let ultimoGiorno = "";
 
   return (
-    <PageContainer>
-      <section className="chat">
-        <header className="chat__testa">
-          <span aria-hidden="true">💬</span>
-          <h1>Chat community</h1>
-        </header>
+    <section className={"chat" + (tastiera ? " chat--tastiera" : "")}>
+      <header className="chat__testa">
+        <span aria-hidden="true">💬</span>
+        <h1>Chat community</h1>
+      </header>
 
-        {impostazioni.avviso && (
-          <p className="chat__avviso">📌 {impostazioni.avviso}</p>
+      {impostazioni.avviso && (
+        <p className="chat__avviso">📌 {impostazioni.avviso}</p>
+      )}
+
+      <div className="chat__lista" ref={listaRef} onScroll={onScroll}>
+        {errore && <p className="alert alert--errore">{errore}</p>}
+
+        {messaggi.length === 0 && !errore && (
+          <p className="chat__vuota">Nessun messaggio. Scrivi tu per primo!</p>
         )}
 
-        <div className="chat__lista" ref={listaRef} onScroll={onScroll}>
-          {errore && <p className="alert alert--errore">{errore}</p>}
+        {messaggi.map((m) => {
+          const data = m.createdAt?.toDate ? m.createdAt.toDate() : new Date();
+          const giorno = data.toDateString();
+          const separatore =
+            giorno !== ultimoGiorno ? (
+              <div className="chat__giorno" key={`g-${m.id}`}>
+                {etichettaGiorno(data)}
+              </div>
+            ) : null;
+          ultimoGiorno = giorno;
 
-          {messaggi.length === 0 && !errore && (
-            <p className="chat__vuota">Nessun messaggio. Scrivi tu per primo!</p>
-          )}
+          const puoEliminare = isAdmin || m.senderId === uid;
 
-          {messaggi.map((m) => {
-            const data = m.createdAt?.toDate ? m.createdAt.toDate() : new Date();
-            const giorno = data.toDateString();
-            const separatore =
-              giorno !== ultimoGiorno ? (
-                <div className="chat__giorno" key={`g-${m.id}`}>
-                  {etichettaGiorno(data)}
-                </div>
-              ) : null;
-            ultimoGiorno = giorno;
-
-            const puoEliminare = isAdmin || m.senderId === uid;
-
-            if (m.type === "listing") {
-              return (
-                <div className="chat__riga-annuncio" key={m.id}>
-                  {separatore}
+          if (m.type === "listing") {
+            return (
+              <div className="chat__riga-annuncio" key={m.id}>
+                {separatore}
+                <button
+                  type="button"
+                  className="chat__annuncio"
+                  onClick={() => navigate(percorsoDettaglio(m.listingType, m.listingId))}
+                >
+                  <span className="chat__annuncio-tag">
+                    {m.listingType === ROOMMATES ? "👥" : "🏠"}{" "}
+                    {m.event === "reactivated" ? "Di nuovo disponibile" : "Nuovo annuncio"}
+                  </span>
+                  <span className="chat__annuncio-testo">{m.text}</span>
+                  <time>{ora(data)}</time>
+                </button>
+                {isAdmin && (
                   <button
                     type="button"
-                    className="chat__annuncio"
-                    onClick={() => navigate(percorsoDettaglio(m.listingType, m.listingId))}
+                    className="chat__elimina"
+                    onClick={() => elimina(m.id)}
+                    aria-label="Elimina messaggio"
                   >
-                    <span className="chat__annuncio-tag">
-                      {m.listingType === ROOMMATES ? "👥" : "🏠"}{" "}
-                      {m.event === "reactivated" ? "Di nuovo disponibile" : "Nuovo annuncio"}
-                    </span>
-                    <span className="chat__annuncio-testo">{m.text}</span>
-                    <time>{ora(data)}</time>
+                    🗑
                   </button>
-                  {isAdmin && (
+                )}
+              </div>
+            );
+          }
+
+          const mio = m.senderId === uid;
+
+          return (
+            <div className={"chat__riga" + (mio ? " chat__riga--mia" : "")} key={m.id}>
+              {separatore}
+              <div className={"msg" + (mio ? " msg--mio" : "")}>
+                {!mio && (
+                  <span className="msg__nome" style={{ color: coloreNome(m.senderId) }}>
+                    {m.senderName || "Utente"}
+                    {m.senderRole === "admin" && <span className="msg__admin">Admin</span>}
+                  </span>
+                )}
+                <span className="msg__testo">{m.text}</span>
+                <span className="msg__ora">
+                  {ora(data)}
+                  {puoEliminare && (
                     <button
                       type="button"
-                      className="chat__elimina"
+                      className="chat__elimina chat__elimina--inline"
                       onClick={() => elimina(m.id)}
                       aria-label="Elimina messaggio"
                     >
                       🗑
                     </button>
                   )}
-                </div>
-              );
-            }
-
-            const mio = m.senderId === uid;
-
-            return (
-              <div className={"chat__riga" + (mio ? " chat__riga--mia" : "")} key={m.id}>
-                {separatore}
-                <div className={"msg" + (mio ? " msg--mio" : "")}>
-                  {!mio && (
-                    <span className="msg__nome" style={{ color: coloreNome(m.senderId) }}>
-                      {m.senderName || "Utente"}
-                      {m.senderRole === "admin" && <span className="msg__admin">Admin</span>}
-                    </span>
-                  )}
-                  <span className="msg__testo">{m.text}</span>
-                  <span className="msg__ora">
-                    {ora(data)}
-                    {puoEliminare && (
-                      <button
-                        type="button"
-                        className="chat__elimina chat__elimina--inline"
-                        onClick={() => elimina(m.id)}
-                        aria-label="Elimina messaggio"
-                      >
-                        🗑
-                      </button>
-                    )}
-                  </span>
-                </div>
+                </span>
               </div>
-            );
-          })}
-        </div>
+            </div>
+          );
+        })}
+      </div>
 
-        {puoScrivere ? (
-          <form className="chat__input" onSubmit={invia}>
-            <textarea
-              rows={1}
-              value={testo}
-              maxLength={1000}
-              placeholder="Scrivi un messaggio"
-              onChange={(e) => setTesto(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  invia();
-                }
-              }}
-            />
-            <button
-              type="submit"
-              className="chat__invia"
-              disabled={!testo.trim() || inviando}
-              aria-label="Invia"
-            >
-              ➤
-            </button>
-          </form>
-        ) : (
-          <p className="chat__nota">
-            {silenziato
-              ? "🔇 Sei stato silenziato dagli amministratori."
-              : chatChiusa
-              ? "🔒 La chat è temporaneamente chiusa."
-              : "🔒 In questa chat possono scrivere solo gli amministratori."}
-          </p>
-        )}
-      </section>
-    </PageContainer>
+      {puoScrivere ? (
+        <form className="chat__input" onSubmit={invia}>
+          <textarea
+            rows={1}
+            value={testo}
+            maxLength={1000}
+            placeholder="Scrivi un messaggio"
+            onChange={(e) => setTesto(e.target.value)}
+            onFocus={() => {
+              inputFocus.current = true;
+              aggiornaRef.current?.();
+              window.scrollTo(0, 0);
+            }}
+            onBlur={() => {
+              inputFocus.current = false;
+              aggiornaRef.current?.();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                invia();
+              }
+            }}
+          />
+          <button
+            type="submit"
+            className="chat__invia"
+            disabled={!testo.trim() || inviando}
+            onMouseDown={(e) => e.preventDefault()}
+            aria-label="Invia"
+          >
+            ➤
+          </button>
+        </form>
+      ) : (
+        <p className="chat__nota">
+          {silenziato
+            ? "🔇 Sei stato silenziato dagli amministratori."
+            : chatChiusa
+            ? "🔒 La chat è temporaneamente chiusa."
+            : "🔒 In questa chat possono scrivere solo gli amministratori."}
+        </p>
+      )}
+    </section>
   );
 }
 
