@@ -15,6 +15,7 @@ import {
 import { auth, db } from "../firebase";
 import useUtente from "../hooks/useUtente";
 import { ROOMMATES, percorsoDettaglio } from "../utils/helpers";
+import { MenuNavigazione } from "../components/Navbar";
 
 const COLORI = ["#1f7a8c", "#7b4fa3", "#2d7d46", "#b0356a", "#3a5fb0", "#a0701a"];
 
@@ -189,10 +190,6 @@ function Chat() {
 
   return (
     <section className={"chat" + (tastiera ? " chat--tastiera" : "")}>
-      <header className="chat__testa">
-        <span aria-hidden="true">💬</span>
-        <h1>Chat community</h1>
-      </header>
 
       {impostazioni.avviso && (
         <p className="chat__avviso">📌 {impostazioni.avviso}</p>
@@ -280,49 +277,57 @@ function Chat() {
         })}
       </div>
 
-      {puoScrivere ? (
-        <form className="chat__input" onSubmit={invia}>
-          <textarea
-            rows={1}
-            value={testo}
-            maxLength={1000}
-            placeholder="Scrivi un messaggio"
-            onChange={(e) => setTesto(e.target.value)}
-            onFocus={() => {
-              inputFocus.current = true;
-              aggiornaRef.current?.();
-              window.scrollTo(0, 0);
-            }}
-            onBlur={() => {
-              inputFocus.current = false;
-              aggiornaRef.current?.();
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                invia();
-              }
-            }}
-          />
-          <button
-            type="submit"
-            className="chat__invia"
-            disabled={!testo.trim() || inviando}
-            onMouseDown={(e) => e.preventDefault()}
-            aria-label="Invia"
-          >
-            ➤
-          </button>
-        </form>
-      ) : (
-        <p className="chat__nota">
-          {silenziato
-            ? "🔇 Sei stato silenziato dagli amministratori."
-            : chatChiusa
-            ? "🔒 La chat è temporaneamente chiusa."
-            : "🔒 In questa chat possono scrivere solo gli amministratori."}
-        </p>
-      )}
+{puoScrivere ? (
+  <form className="chat__input" onSubmit={invia}>
+    <textarea
+      rows={1}
+      value={testo}
+      maxLength={1000}
+      placeholder="Scrivi un messaggio"
+      aria-label="Scrivi un messaggio"
+      onChange={(e) => setTesto(e.target.value)}
+      onFocus={() => {
+        inputFocus.current = true;
+        aggiornaRef.current?.();
+        window.scrollTo(0, 0);
+      }}
+      onBlur={() => {
+        inputFocus.current = false;
+        aggiornaRef.current?.();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          invia();
+        }
+      }}
+    />
+
+    <button
+      type="submit"
+      className="chat__invia"
+      disabled={!testo.trim() || inviando}
+      onMouseDown={(e) => e.preventDefault()}
+      aria-label="Invia messaggio"
+    >
+      ➤
+    </button>
+
+    <MenuNavigazione className="menu-navigazione--chat" />
+  </form>
+) : (
+  <div className="chat__input chat__input--bloccato">
+    <p className="chat__nota">
+      {silenziato
+        ? "🔇 Sei stato silenziato dagli amministratori."
+        : chatChiusa
+        ? "🔒 La chat è temporaneamente chiusa."
+        : "🔒 In questa chat possono scrivere solo gli amministratori."}
+    </p>
+
+    <MenuNavigazione className="menu-navigazione--chat" />
+  </div>
+)}
     </section>
   );
 }

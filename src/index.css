@@ -1297,3 +1297,391 @@ textarea:focus {
 .navbar--fitta .navbar__voce {
   font-size: 0.56rem;
 }
+
+/* =========================================================
+   NUOVA BARRA CHAT PERSISTENTE E MENU VERTICALE
+   ========================================================= */
+
+/* La vecchia navbar non viene più mostrata */
+.navbar {
+  display: none;
+}
+
+/* Barra visibile in tutte le pagine tranne la chat */
+.barra-chat-globale {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 66px;
+  padding: 8px 10px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+
+  border-top: 1px solid var(--bordo);
+  background: #f3f5f4;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.08);
+}
+
+.barra-chat-globale__apri {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 9px;
+
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 16px;
+
+  overflow: hidden;
+  border: 1px solid var(--bordo);
+  border-radius: 24px;
+  background: var(--carta);
+  color: var(--tenue);
+
+  font: 400 0.95rem var(--font-testo);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.barra-chat-globale__apri span:last-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barra-chat-globale__apri:hover {
+  border-color: var(--primario);
+  color: var(--primario);
+}
+
+.barra-chat-globale__apri:focus-visible {
+  outline: 3px solid var(--primario-chiaro);
+  border-color: var(--primario);
+}
+
+/* Contenitore del pulsante e del menu */
+.menu-navigazione {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Pulsante con tre barre orizzontali */
+.menu-navigazione__bottone {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 46px;
+  height: 46px;
+  padding: 0;
+
+  border: 0;
+  border-radius: 50%;
+  background: var(--primario);
+  color: #fff;
+  cursor: pointer;
+}
+
+.menu-navigazione__bottone:hover {
+  background: var(--primario-scuro);
+}
+
+.menu-navigazione__bottone:focus-visible {
+  outline: 3px solid var(--saffron);
+  outline-offset: 2px;
+}
+
+.menu-navigazione__bottone.is-aperto {
+  background: var(--primario-scuro);
+}
+
+/* Disegno delle tre barre */
+.menu-navigazione__barre {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+
+  width: 20px;
+  height: 20px;
+}
+
+.menu-navigazione__barre span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* Badge notifiche sul pulsante menu */
+.menu-navigazione__badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+
+  display: grid;
+  place-items: center;
+
+  min-width: 21px;
+  height: 21px;
+  padding: 0 5px;
+
+  border: 2px solid #f3f5f4;
+  border-radius: 999px;
+  background: var(--fav);
+  color: #fff;
+
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Menu che si apre verso l'alto */
+.menu-navigazione__pannello {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 10px);
+  z-index: 1100;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  width: min(270px, calc(100vw - 20px));
+  max-height: min(520px, calc(100dvh - 100px));
+  padding: 8px;
+
+  overflow-y: auto;
+
+  border: 1px solid var(--bordo);
+  border-radius: 16px;
+  background: var(--carta);
+  box-shadow:
+    0 12px 35px rgba(22, 33, 30, 0.2),
+    0 2px 8px rgba(22, 33, 30, 0.1);
+}
+
+/* Singola voce verticale */
+.menu-navigazione__voce {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  min-height: 48px;
+  padding: 8px 12px;
+
+  border-radius: 11px;
+  color: var(--inchiostro);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.menu-navigazione__voce:hover {
+  background: var(--primario-chiaro);
+  color: var(--primario-scuro);
+}
+
+.menu-navigazione__voce.attiva {
+  background: var(--primario);
+  color: #fff;
+}
+
+.menu-navigazione__voce:focus-visible {
+  outline: 3px solid var(--saffron);
+  outline-offset: -2px;
+}
+
+.menu-navigazione__icona {
+  display: grid;
+  flex: 0 0 32px;
+  place-items: center;
+  font-size: 1.25rem;
+}
+
+/* =========================================================
+   CHAT SENZA TESTATA INTERNA
+   ========================================================= */
+
+.chat {
+  height: calc(100dvh - 52px);
+  min-height: 0;
+  border: 0;
+  border-radius: 0;
+}
+
+/*
+  Se visualViewport è disponibile, Chat.jsx imposta --vvh.
+  In questo modo la chat segue l'altezza realmente visibile
+  quando si apre la tastiera dello smartphone.
+*/
+html.chat-attiva .chat {
+  position: fixed;
+  top: calc(52px + var(--vvt, 0px));
+  right: 0;
+  bottom: auto;
+  left: 0;
+
+  width: 100%;
+  height: calc(var(--vvh, 100dvh) - 52px);
+}
+
+/* Area messaggi */
+.chat__lista {
+  min-height: 0;
+  padding-bottom: 14px;
+}
+
+/* Barra inferiore interna alla chat */
+.chat__input {
+  position: relative;
+  z-index: 20;
+
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: 8px;
+
+  padding: 8px 10px;
+  padding-bottom: max(8px, env(safe-area-inset-bottom));
+
+  border-top: 1px solid var(--bordo);
+  background: #f3f5f4;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.chat__input textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 46px;
+  height: 46px;
+  max-height: 120px;
+  margin: 0;
+  padding: 11px 16px;
+
+  border-radius: 24px;
+  resize: none;
+}
+
+/* Pulsante invio */
+.chat__invia {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+}
+
+.chat__invia:focus-visible {
+  outline: 3px solid var(--saffron);
+  outline-offset: 2px;
+}
+
+/* Stato chat non scrivibile */
+.chat__input--bloccato {
+  align-items: center;
+}
+
+.chat__nota {
+  display: flex;
+  flex: 1;
+  align-items: center;
+
+  min-height: 46px;
+  margin: 0;
+  padding: 8px 14px;
+
+  border: 1px solid var(--bordo);
+  border-radius: 24px;
+  background: var(--carta);
+  color: var(--tenue);
+
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+/*
+  Il badge ha il bordo dello stesso colore
+  della barra inferiore della chat.
+*/
+.chat__input .menu-navigazione__badge {
+  border-color: #f3f5f4;
+}
+
+/* Mantiene spazio sufficiente sopra la barra globale */
+body {
+  padding-bottom: calc(82px + env(safe-area-inset-bottom));
+}
+
+/*
+  Quando la chat è aperta non serve lo spazio aggiuntivo
+  usato dalle altre pagine.
+*/
+html.chat-attiva body {
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+/* Desktop: barra centrata ma sempre in basso */
+@media (min-width: 720px) {
+  .barra-chat-globale {
+    padding-right: max(16px, calc((100vw - 1100px) / 2));
+    padding-left: max(16px, calc((100vw - 1100px) / 2));
+  }
+
+  .chat__input {
+    padding-right: max(12px, calc((100vw - 1100px) / 2));
+    padding-left: max(12px, calc((100vw - 1100px) / 2));
+  }
+
+  .chat__lista {
+    padding-right: max(20px, calc((100vw - 1100px) / 2));
+    padding-left: max(20px, calc((100vw - 1100px) / 2));
+  }
+
+  .menu-navigazione__pannello {
+    width: 260px;
+  }
+}
+
+/* Telefoni molto stretti */
+@media (max-width: 390px) {
+  .chat__input {
+    gap: 6px;
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .chat__invia,
+  .menu-navigazione__bottone {
+    flex-basis: 42px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .chat__input textarea {
+    min-height: 42px;
+    height: 42px;
+    padding: 9px 13px;
+    font-size: 0.92rem;
+  }
+
+  .barra-chat-globale {
+    gap: 6px;
+    padding-right: 6px;
+    padding-left: 6px;
+  }
+
+  .barra-chat-globale__apri {
+    min-height: 42px;
+    padding: 0 13px;
+    font-size: 0.88rem;
+  }
+}
