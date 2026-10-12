@@ -4,6 +4,7 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import useRecensioni from "../hooks/useRecensioni";
 import { nomeCorrente } from "../services/annunci";
+import { abbreviaNomeCompleto } from "../utils/helpers";
 
 export function Stelle({ valore = 0 }) {
   const piene = Math.round(valore);
@@ -116,7 +117,7 @@ function Recensioni({ userId, puoiRecensire }) {
           {recensioni.map((r) => (
             <article className="recensione" key={r.id}>
               <div>
-                <strong>{r.reviewerName || "Utente"}</strong>{" "}
+                reviewerName: nomeCorrente(),{" "}
                 <Stelle valore={r.rating} />
               </div>
               {r.comment && <p>{r.comment}</p>}

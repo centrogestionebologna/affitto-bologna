@@ -1,26 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  collection,
-  deleteDoc,
-  doc,
-  getDocs,
-  query,
-  updateDoc,
-  where,
-} from "firebase/firestore";
+  PROPERTIES,
+  ROOMMATES,
+  abbreviaNomeCompleto,
+  percorsoDettaglio,
+  secondi,
+} from "../utils/helpers";
 
 import { auth, db } from "../firebase";
 import PageContainer from "../components/PageContainer";
 import ListingCard from "../components/ListingCard";
 import AnnuncioForm from "../components/AnnuncioForm";
 import { decidiRichiesta, pubblicaInChat } from "../services/annunci";
-import {
-  PROPERTIES,
-  ROOMMATES,
-  percorsoDettaglio,
-  secondi,
-} from "../utils/helpers";
 
 const ordina = (lista) =>
   [...lista].sort((a, b) => secondi(b.createdAt) - secondi(a.createdAt));
@@ -302,8 +294,9 @@ function MieiAnnunci() {
                 <li className="scheda richiesta" key={r.id}>
                   <div className="richiesta__corpo">
                     <strong>
-                      <Link to={`/utente/${r.fromId}`}>{r.fromName || "Utente"}</Link>
-                    </strong>{" "}
+<Link to={`/utente/${r.fromId}`}>
+  {abbreviaNomeCompleto(r.fromName)}
+</Link>                    </strong>{" "}
                     per{" "}
                     <Link to={percorsoDettaglio(r.listingType, r.listingId)}>
                       {r.listingTitle || "il tuo annuncio"}

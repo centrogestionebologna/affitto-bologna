@@ -1,56 +1,66 @@
 import { useState } from "react";
 
 import { auth } from "../firebase";
-import { GENERE_PERSONA, OCCUPAZIONE_PERSONA } from "../utils/helpers";
 
 const VUOTO = {
   firstName: "",
   lastName: "",
   phone: "",
-  birthDate: "",
-  gender: "",
-  occupation: "",
-  studyOrWork: "",
   accountType: "homeSeeker",
-  bio: "",
 };
 
 function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
   const [f, setF] = useState(() => {
     const stato = { ...VUOTO };
-    Object.keys(VUOTO).forEach((k) => {
-      if (iniziale[k] !== undefined && iniziale[k] !== null) stato[k] = iniziale[k];
+
+    Object.keys(VUOTO).forEach((chiave) => {
+      if (
+        iniziale[chiave] !== undefined &&
+        iniziale[chiave] !== null
+      ) {
+        stato[chiave] = iniziale[chiave];
+      }
     });
+
     return stato;
   });
+
   const [errore, setErrore] = useState("");
   const [invio, setInvio] = useState(false);
 
-  const c = (k) => ({
-    value: f[k],
-    onChange: (e) => setF((p) => ({ ...p, [k]: e.target.value })),
+  const campo = (chiave) => ({
+    value: f[chiave],
+    onChange: (e) =>
+      setF((precedente) => ({
+        ...precedente,
+        [chiave]: e.target.value,
+      })),
   });
 
   const invia = async (e) => {
     e.preventDefault();
     setErrore("");
 
-    if (!f.firstName.trim()) return setErrore("Inserisci il tuo nome.");
-    if (!f.lastName.trim()) return setErrore("Inserisci il tuo cognome.");
-    if (f.phone.replace(/\D/g, "").length < 6)
+    if (!f.firstName.trim()) {
+      return setErrore("Inserisci il tuo nome.");
+    }
+
+    if (!f.lastName.trim()) {
+      return setErrore("Inserisci il tuo cognome.");
+    }
+
+    if (f.phone.replace(/\D/g, "").length < 6) {
       return setErrore("Inserisci un numero di telefono valido.");
-    if (!f.gender) return setErrore("Seleziona il genere.");
-    if (!f.occupation) return setErrore("Indica se sei studente o lavoratore.");
+    }
 
     setInvio(true);
+
     try {
       await onSubmit({
-        ...f,
         firstName: f.firstName.trim(),
         lastName: f.lastName.trim(),
         phone: f.phone.trim(),
-        studyOrWork: f.studyOrWork.trim(),
-        bio: f.bio.trim(),
+        accountType: f.accountType,
       });
     } catch (error) {
       console.error(error);
@@ -64,63 +74,55 @@ function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
     <form onSubmit={invia} noValidate>
       <div className="griglia-campi">
         <div className="campo">
-          <label htmlFor="pf-nome">Nome *</label>
-          <input id="pf-nome" type="text" {...c("firstName")} />
+          <label htmlFor="pf-nome">Nome</label>
+
+          <input
+            id="pf-nome"
+            type="text"
+            autoComplete="given-name"
+            {...campo("firstName")}
+          />
         </div>
 
         <div className="campo">
-          <label htmlFor="pf-cognome">Cognome *</label>
-          <input id="pf-cognome" type="text" {...c("lastName")} />
+          <label htmlFor="pf-cognome">Cognome</label>
+
+          <input
+            id="pf-cognome"
+            type="text"
+            autoComplete="family-name"
+            {...campo("lastName")}
+          />
         </div>
 
         <div className="campo">
           <label htmlFor="pf-email">Email</label>
+
           <input
             id="pf-email"
             type="text"
-            value={auth.currentUser.email || ""}
+            value={auth.currentUser?.email || ""}
             readOnly
           />
         </div>
 
         <div className="campo">
-          <label htmlFor="pf-tel">Telefono *</label>
-          <input id="pf-tel" type="tel" {...c("phone")} />
+          <label htmlFor="pf-tel">Telefono</label>
+
+          <input
+            id="pf-tel"
+            type="tel"
+            autoComplete="tel"
+            {...campo("phone")}
+          />
         </div>
 
         <div className="campo">
-          <label htmlFor="pf-nascita">Data di nascita</label>
-          <input id="pf-nascita" type="date" {...c("birthDate")} />
-        </div>
+          <label htmlFor="pf-tipo">
+            Cosa fai su Affitto Bologna
+          </label>
 
-        <div className="campo">
-          <label htmlFor="pf-genere">Genere *</label>
-          <select id="pf-genere" {...c("gender")}>
-            <option value="">Seleziona</option>
-            {GENERE_PERSONA.map((g) => (
-              <option key={g}>{g}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="campo">
-          <label htmlFor="pf-occ">Sei studente o lavoratore? *</label>
-          <select id="pf-occ" {...c("occupation")}>
-            <option value="">Seleziona</option>
-            {OCCUPAZIONE_PERSONA.map((o) => (
-              <option key={o}>{o}</option>
-            ))}
-          </select>
-        </div>
-
-        <div className="campo">
-          <label htmlFor="pf-studio">Università / luogo di lavoro</label>
-          <input id="pf-studio" type="text" {...c("studyOrWork")} />
-        </div>
-
-        <div className="campo">
-          <label htmlFor="pf-tipo">Cosa fai su Affitto Bologna</label>
-          <select id="pf-tipo" {...c("accountType")}>
+          <select id="pf-tipo" {...campo("accountType")}>
             <option value="homeSeeker">Cerco casa</option>
             <option value="homeProvider">Offro casa</option>
             <option value="both">Entrambi</option>
@@ -128,24 +130,21 @@ function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
         </div>
       </div>
 
-      <div className="campo">
-        <label htmlFor="pf-bio">Presentazione</label>
-        <textarea
-          id="pf-bio"
-          placeholder="Racconta chi sei in poche righe"
-          maxLength={500}
-          {...c("bio")}
-        />
-      </div>
-
       <p className="tenue">
-        Telefono ed email restano privati: li vede solo chi approvi o chi
-        approva le tue richieste.
+        Il cognome completo, il telefono e l’email restano privati.
+        Agli altri utenti viene mostrato solamente il nome con
+        l’iniziale del cognome.
       </p>
 
-      {errore && <p className="alert alert--errore">{errore}</p>}
+      {errore && (
+        <p className="alert alert--errore">{errore}</p>
+      )}
 
-      <button type="submit" className="btn btn--primario btn--blocco" disabled={invio}>
+      <button
+        type="submit"
+        className="btn btn--primario btn--blocco"
+        disabled={invio}
+      >
         {invio ? "Salvataggio..." : etichetta}
       </button>
     </form>

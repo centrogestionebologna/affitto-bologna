@@ -18,7 +18,7 @@ const VOCI = [
   { to: "/chat", icona: "💬", label: "Chat" },
   { to: "/casa", icona: "🏠", label: "Casa" },
   { to: "/coinquilini", icona: "👥", label: "Coinquilini" },
-  { to: "/annunci", icona: "📋", label: "Annunci" },
+  { to: "/annunci", icona: "📋", label: "I miei annunci" },
   { to: "/notifiche", icona: "🔔", label: "Notifiche" },
   { to: "/profilo", icona: "👤", label: "Profilo" },
 ];

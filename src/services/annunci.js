@@ -1,6 +1,7 @@
 import {
   addDoc,
   collection,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -14,13 +15,21 @@ import {
 } from "firebase/firestore";
 
 import { auth, db } from "../firebase";
-import { riepilogoChat } from "../utils/helpers";
+import {
+  abbreviaNomeCompleto,
+  nomePubblico,
+  riepilogoChat,
+} from "../utils/helpers";
 
-export const nomeCorrente = () =>
-  auth.currentUser?.displayName || auth.currentUser?.email || "Un utente";
+export const nomeCorrente = () => {
+  const displayName = auth.currentUser?.displayName;
 
-const nomeDaProfilo = (p) =>
-  `${p?.firstName || ""} ${p?.lastName || ""}`.trim();
+  if (displayName) {
+    return abbreviaNomeCompleto(displayName);
+  }
+
+  return "Utente";
+};
 
 // Una notifica fallita non deve mai bloccare l'azione principale
 export async function creaNotifica({
@@ -105,22 +114,31 @@ export async function inviaRichiestaContatto(annuncio, tipo, intro) {
     getDoc(doc(db, "userContacts", utente.uid)),
   ]);
 
-  const nome = nomeDaProfilo(profilo.data()) || nomeCorrente();
-  const c = contatti.data() || {};
+const datiProfilo = profilo.data() || {};
+const c = contatti.data() || {};
 
-  await setDoc(doc(db, "contactRequests", `${utente.uid}_${annuncio.id}`), {
-    fromId: utente.uid,
-    fromName: nome,
-    fromPhone: c.phone || "",
-    fromEmail: c.email || utente.email || "",
-    intro,
-    toId: annuncio.ownerId,
-    listingId: annuncio.id,
-    listingType: tipo,
-    listingTitle: annuncio.title || "",
-    status: "pending",
-    createdAt: serverTimestamp(),
-  });
+const nome = nomePubblico(
+  datiProfilo.firstName,
+  datiProfilo.lastName
+);
+
+await setDoc(doc(db, "contactRequests", `${utente.uid}_${annuncio.id}`), {
+  fromId: utente.uid,
+  fromName: nome,
+  fromFirstName: datiProfilo.firstName || "",
+  fromLastInitial: datiProfilo.lastName
+    ? datiProfilo.lastName.charAt(0).toUpperCase()
+    : "",
+  fromPhone: c.phone || "",
+  fromEmail: c.email || utente.email || "",
+  intro,
+  toId: annuncio.ownerId,
+  listingId: annuncio.id,
+  listingType: tipo,
+  listingTitle: annuncio.title || "",
+  status: "pending",
+  createdAt: serverTimestamp(),
+});
 
   await creaNotifica({
     userId: annuncio.ownerId,
@@ -181,9 +199,16 @@ export async function salvaProfilo(dati) {
   const { phone, ...pubblici } = dati;
   const snap = await getDoc(ref);
 
-  if (snap.exists()) {
-    await updateDoc(ref, pubblici);
-  } else {
+if (snap.exists()) {
+  await updateDoc(ref, {
+    ...pubblici,
+    birthDate: deleteField(),
+    gender: deleteField(),
+    occupation: deleteField(),
+    studyOrWork: deleteField(),
+    bio: deleteField(),
+  });
+} else {
     await setDoc(ref, {
       ...pubblici,
       role: "user",

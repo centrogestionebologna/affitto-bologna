@@ -15,8 +15,11 @@ import {
 
 import { auth, db } from "../firebase";
 import useUtente from "../hooks/useUtente";
-import { ROOMMATES, percorsoDettaglio } from "../utils/helpers";
-import { MenuNavigazione } from "../components/Navbar";
+import {
+  ROOMMATES,
+  nomePubblico,
+  percorsoDettaglio,
+} from "../utils/helpers";import { MenuNavigazione } from "../components/Navbar";
 
 const COLORI = ["#1f7a8c", "#7b4fa3", "#2d7d46", "#b0356a", "#3a5fb0", "#a0701a"];
 
@@ -149,10 +152,9 @@ const [menuMessaggio, setMenuMessaggio] = useState("");
   const silenziato = Boolean(profilo?.chatMuted);
   const puoScrivere = !chatChiusa && !soloAdmin && !silenziato;
 
-  const nomeMio = profilo
-    ? `${profilo.firstName || ""} ${(profilo.lastName || "").charAt(0)}`.trim() +
-      (profilo.lastName ? "." : "")
-    : "Utente";
+const nomeMio = profilo
+  ? nomePubblico(profilo.firstName, profilo.lastName)
+  : "Utente";
 
   const invia = async (e) => {
     e?.preventDefault();

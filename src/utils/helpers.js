@@ -207,3 +207,32 @@ export function riepilogoChat(a, tipo) {
     .filter(Boolean)
     .join(" • ");
 }
+
+// Restituisce "Nome C." partendo da nome e cognome separati.
+// Il cognome completo non viene mostrato agli utenti.
+export function nomePubblico(firstName = "", lastName = "") {
+  const nome = String(firstName).trim();
+  const cognome = String(lastName).trim();
+
+  if (!nome) return "Utente";
+  if (!cognome) return nome;
+
+  return `${nome} ${cognome.charAt(0).toUpperCase()}.`;
+}
+
+// Compatibilità con i vecchi dati nei quali nome e cognome
+// erano salvati insieme in una singola stringa.
+export function abbreviaNomeCompleto(nomeCompleto = "") {
+  const parti = String(nomeCompleto)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parti.length === 0) return "Utente";
+  if (parti.length === 1) return parti[0];
+
+  const nome = parti[0];
+  const inizialeCognome = parti[parti.length - 1].charAt(0).toUpperCase();
+
+  return `${nome} ${inizialeCognome}.`;
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { doc, getDoc } from "firebase/firestore";
-
+import { nomePubblico } from "../utils/helpers";
 import { auth, db } from "../firebase";
 import PageContainer from "../components/PageContainer";
 import Recensioni from "../components/Recensioni.jsx";
@@ -58,9 +58,9 @@ function ProfiloPubblico() {
       ) : (
         <>
           <h1 className="titolo-pagina">
-            {`${utente.firstName || ""} ${utente.lastName || ""}`.trim() || "Utente"}
-            {utente.verified && " ✅"}
-          </h1>
+  {nomePubblico(utente.firstName, utente.lastName)}
+  {utente.verified && " ✅"}
+</h1>
 
           <p className="tenue">
             Membro da{" "}

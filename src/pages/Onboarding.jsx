@@ -12,20 +12,20 @@ function Onboarding({ profilo, contatti }) {
   const [invio, setInvio] = useState(false);
   const [errore, setErrore] = useState("");
 
-  const iniziale = {
-    firstName:
-      profilo?.firstName ?? (utente.displayName?.split(" ")[0] || ""),
-    lastName:
-      profilo?.lastName ??
-      (utente.displayName?.split(" ").slice(1).join(" ") || ""),
-    phone: contatti?.phone || "",
-    birthDate: profilo?.birthDate || "",
-    gender: profilo?.gender || "",
-    occupation: profilo?.occupation || "",
-    studyOrWork: profilo?.studyOrWork || "",
-    accountType: profilo?.accountType || "homeSeeker",
-    bio: profilo?.bio || "",
-  };
+const iniziale = {
+  firstName:
+    profilo?.firstName ??
+    (utente.displayName?.split(" ")[0] || ""),
+
+  lastName:
+    profilo?.lastName ??
+    (utente.displayName?.split(" ").slice(1).join(" ") || ""),
+
+  phone: contatti?.phone || "",
+
+  accountType:
+    profilo?.accountType || "homeSeeker",
+};
 
   const continua = async (dati) => {
     await salvaProfilo(dati);
