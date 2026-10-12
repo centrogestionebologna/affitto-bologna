@@ -1685,3 +1685,222 @@ html.chat-attiva body {
     font-size: 0.88rem;
   }
 }
+
+/* =========================================================
+   MESSAGGI FISSATI
+   ========================================================= */
+
+.chat-pin {
+  position: relative;
+  z-index: 30;
+
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+
+  min-height: 58px;
+  padding: 7px 10px;
+
+  border-bottom: 1px solid var(--bordo);
+  background: var(--carta);
+  box-shadow: 0 2px 7px rgba(22, 33, 30, 0.08);
+}
+
+.chat-pin::before {
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 0;
+
+  width: 4px;
+
+  border-radius: 0 4px 4px 0;
+  background: var(--primario);
+
+  content: "";
+}
+
+.chat-pin__contenuto {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 9px;
+
+  min-width: 0;
+  padding: 3px 6px;
+
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.chat-pin__contenuto:hover {
+  background: #f4f7f5;
+  border-radius: 9px;
+}
+
+.chat-pin__contenuto:focus-visible {
+  outline: 3px solid var(--primario-chiaro);
+  border-radius: 9px;
+}
+
+.chat-pin__icona {
+  flex: 0 0 auto;
+  font-size: 1rem;
+}
+
+.chat-pin__testi {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.chat-pin__autore {
+  overflow: hidden;
+  color: var(--primario);
+  font-size: 0.78rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-pin__anteprima {
+  display: block;
+
+  width: 100%;
+  overflow: hidden;
+
+  color: var(--tenue);
+  font-size: 0.82rem;
+  line-height: 1.35;
+
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chat-pin__azioni {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+}
+
+.chat-pin__freccia,
+.chat-pin__rimuovi {
+  display: grid;
+  place-items: center;
+
+  width: 32px;
+  height: 32px;
+  padding: 0;
+
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--tenue);
+
+  font: 600 1.2rem var(--font-testo);
+  cursor: pointer;
+}
+
+.chat-pin__freccia:hover,
+.chat-pin__rimuovi:hover {
+  background: var(--primario-chiaro);
+  color: var(--primario);
+}
+
+.chat-pin__rimuovi {
+  font-size: 0.9rem;
+}
+
+.chat-pin__contatore {
+  min-width: 30px;
+  color: var(--tenue);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Azioni presenti sui messaggi */
+.chat__azioni-messaggio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin-top: 2px;
+}
+
+.chat__pin-button {
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  font-size: 0.78rem;
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.chat__pin-button:hover {
+  background: rgba(14, 92, 76, 0.1);
+  opacity: 1;
+}
+
+.chat__pin-button.is-attivo {
+  color: var(--primario);
+  opacity: 1;
+}
+
+.chat__pin-button--inline {
+  margin-left: 4px;
+  padding: 0 2px;
+}
+
+/* Evidenziazione quando si clicca il banner fissato */
+.chat__messaggio--evidenziato .msg,
+.chat__messaggio--evidenziato .chat__annuncio {
+  animation: evidenzia-messaggio 1.8s ease;
+}
+
+@keyframes evidenzia-messaggio {
+  0%,
+  100% {
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
+  }
+
+  25%,
+  70% {
+    box-shadow:
+      0 0 0 3px var(--saffron),
+      0 4px 16px rgba(227, 162, 26, 0.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat__messaggio--evidenziato .msg,
+  .chat__messaggio--evidenziato .chat__annuncio {
+    animation-duration: 0.1s;
+  }
+}
+
+@media (max-width: 390px) {
+  .chat-pin {
+    gap: 4px;
+    padding-right: 5px;
+    padding-left: 7px;
+  }
+
+  .chat-pin__freccia,
+  .chat-pin__rimuovi {
+    width: 28px;
+    height: 28px;
+  }
+
+  .chat-pin__contatore {
+    min-width: 26px;
+  }
+}
