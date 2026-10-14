@@ -9,15 +9,6 @@ import {
 
 import { db } from "../firebase";
 
-const VOCI = [
-  { icona: "💬", label: "Chat" },
-  { icona: "🏠", label: "Casa" },
-  { icona: "👥", label: "Coinquilini" },
-  { icona: "📋", label: "I miei annunci" },
-  { icona: "🔔", label: "Notifiche" },
-  { icona: "👤", label: "Profilo" },
-];
-
 const COLORI = ["#1f7a8c", "#7b4fa3", "#2d7d46", "#b0356a", "#3a5fb0", "#a0701a"];
 
 const coloreNome = (uid = "") => {
@@ -94,94 +85,12 @@ function leggiMessaggio(documento) {
   };
 }
 
-function MenuOspite({ onSblocca }) {
-  const [aperto, setAperto] = useState(false);
-  const contenitoreRef = useRef(null);
-
-  useEffect(() => {
-    if (!aperto) return undefined;
-
-    const chiudiFuori = (event) => {
-      if (
-        contenitoreRef.current &&
-        !contenitoreRef.current.contains(event.target)
-      ) {
-        setAperto(false);
-      }
-    };
-
-    const chiudiConEsc = (event) => {
-      if (event.key === "Escape") setAperto(false);
-    };
-
-    document.addEventListener("pointerdown", chiudiFuori);
-    document.addEventListener("keydown", chiudiConEsc);
-
-    return () => {
-      document.removeEventListener("pointerdown", chiudiFuori);
-      document.removeEventListener("keydown", chiudiConEsc);
-    };
-  }, [aperto]);
-
-  return (
-    <div
-      ref={contenitoreRef}
-      className="menu-navigazione menu-navigazione--ospite"
-    >
-      {aperto && (
-        <div
-          className="menu-navigazione__pannello"
-          role="menu"
-          aria-label="Menu: accesso richiesto"
-        >
-          {VOCI.map((voce) => (
-            <button
-              type="button"
-              key={voce.label}
-              role="menuitem"
-              className="menu-navigazione__voce menu-navigazione__voce--ospite"
-              onClick={() => {
-                setAperto(false);
-                onSblocca();
-              }}
-            >
-              <span className="menu-navigazione__icona" aria-hidden="true">
-                {voce.icona}
-              </span>
-
-              <span className="menu-navigazione__etichetta">{voce.label}</span>
-
-              <span className="pillola-blocco">🔒 accedi per sbloccare</span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      <button
-        type="button"
-        className={`menu-navigazione__bottone${aperto ? " is-aperto" : ""}`}
-        onClick={() => setAperto((valore) => !valore)}
-        aria-label={aperto ? "Chiudi menu" : "Apri menu"}
-        aria-expanded={aperto}
-      >
-        <span className="menu-navigazione__barre" aria-hidden="true">
-          <span />
-          <span />
-          <span />
-        </span>
-      </button>
-    </div>
-  );
-}
-
 function AnteprimaChat({ onAccedi, caricamento = false, errore = "" }) {
   const [messaggi, setMessaggi] = useState(null);
   const [fissati, setFissati] = useState([]);
   const [logoOk, setLogoOk] = useState(true);
-  const [pulsa, setPulsa] = useState(false);
 
   const listaRef = useRef(null);
-  const timerRef = useRef(null);
 
   useEffect(() => {
     document.body.style.overflow = "hidden";
@@ -231,14 +140,6 @@ function AnteprimaChat({ onAccedi, caricamento = false, errore = "" }) {
     const el = listaRef.current;
     if (el) el.scrollTop = el.scrollHeight;
   }, [messaggi]);
-
-  useEffect(() => () => clearTimeout(timerRef.current), []);
-
-  const evidenzia = () => {
-    setPulsa(true);
-    clearTimeout(timerRef.current);
-    timerRef.current = setTimeout(() => setPulsa(false), 1000);
-  };
 
   const lista = messaggi && messaggi.length > 0 ? messaggi : DEMO;
   let ultimoGiorno = "";
@@ -319,22 +220,27 @@ function AnteprimaChat({ onAccedi, caricamento = false, errore = "" }) {
         <div className="anteprima__velo" />
 
         <section className="gruppo-sheet" aria-label="Accesso alla community">
-          <div className="gruppo-sheet__logo">
-            {logoOk ? (
-              <img
-                src="/logo.png"
-                alt="Affitto Bologna"
-                onError={() => setLogoOk(false)}
-              />
-            ) : (
-              <span aria-hidden="true">🏠</span>
-            )}
+          <div className="gruppo-sheet__intestazione">
+            <div className="gruppo-sheet__logo">
+              {logoOk ? (
+                <img
+                  src="/logo.png"
+                  alt="Affitto Bologna"
+                  onError={() => setLogoOk(false)}
+                />
+              ) : (
+                <span aria-hidden="true">🏠</span>
+              )}
+            </div>
+
+            <div className="gruppo-sheet__testi">
+              <h2 className="gruppo-sheet__titolo">AFFITTO BOLOGNA</h2>
+              <p className="gruppo-sheet__sotto">
+                Community di studenti e lavoratori · Bologna
+              </p>
+            </div>
           </div>
 
-          <h2 className="gruppo-sheet__titolo">AFFITTO BOLOGNA</h2>
-          <p className="gruppo-sheet__sotto">
-            Community di studenti e lavoratori · Bologna
-          </p>
           <p className="gruppo-sheet__info">
             Accedi per leggere tutta la chat, cercare casa e coinquilini e
             pubblicare i tuoi annunci.
@@ -348,38 +254,13 @@ function AnteprimaChat({ onAccedi, caricamento = false, errore = "" }) {
 
           <button
             type="button"
-            className={
-              "gruppo-sheet__bottone" +
-              (pulsa ? " gruppo-sheet__bottone--pulsa" : "")
-            }
+            className="gruppo-sheet__bottone"
             onClick={onAccedi}
             disabled={caricamento}
           >
             {caricamento ? "Accesso in corso..." : "Accedi con Google"}
           </button>
         </section>
-      </div>
-
-      <div className="chat__input anteprima__bar">
-        <button
-          type="button"
-          className="anteprima__finto"
-          onClick={evidenzia}
-        >
-          <span aria-hidden="true">🔒</span>
-          <span>Accedi per scrivere</span>
-        </button>
-
-        <button
-          type="button"
-          className="chat__invia"
-          disabled
-          aria-label="Invia: accesso richiesto"
-        >
-          ➤
-        </button>
-
-        <MenuOspite onSblocca={evidenzia} />
       </div>
     </div>
   );

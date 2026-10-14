@@ -2270,3 +2270,131 @@ button.menu-navigazione__voce {
     max-width: 520px;
   }
 }
+
+/* ===== Schermata di accesso: riquadro centrato (versione finale) ===== */
+.anteprima__contenuto {
+  filter: blur(4px);
+  transform: scale(1.03);
+}
+
+.anteprima__velo {
+  background: rgba(11, 20, 26, 0.3);
+}
+
+.anteprima__contenuto .chat__lista {
+  padding-bottom: 40px;
+}
+
+.gruppo-sheet {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  z-index: 5;
+
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  align-self: center;
+
+  width: 100%;
+  max-width: 620px;
+  min-height: 0;
+  margin: -28px auto 0;
+  padding: 22px 18px max(18px, env(safe-area-inset-bottom));
+
+  border-radius: 28px 28px 0 0;
+  background: #151c21;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  text-align: center;
+}
+
+.gruppo-sheet__intestazione {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin: 0 0 16px;
+}
+
+.gruppo-sheet__logo {
+  flex: 0 0 auto;
+  width: 88px;
+  height: 88px;
+  margin: 0 0 12px;
+  font-size: 2.2rem;
+}
+
+.gruppo-sheet__testi {
+  text-align: center;
+}
+
+.gruppo-sheet__titolo {
+  margin: 0 0 4px;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  text-align: center;
+}
+
+.gruppo-sheet__sotto {
+  margin: 0;
+  font-size: 0.85rem;
+  text-align: center;
+}
+
+.gruppo-sheet__info {
+  display: none;
+}
+
+.gruppo-sheet__errore {
+  width: 100%;
+  max-width: none;
+  margin: 0 0 12px;
+  text-align: center;
+}
+
+.gruppo-sheet__bottone {
+  width: 100%;
+  max-width: none;
+  min-height: 50px;
+  margin: 0;
+}
+
+/* Tablet e desktop: riquadro più grande, sempre centrato */
+@media (min-width: 720px) {
+  .gruppo-sheet {
+    padding: 32px 24px max(24px, env(safe-area-inset-bottom));
+  }
+
+  .gruppo-sheet__intestazione {
+    margin-bottom: 12px;
+  }
+
+  .gruppo-sheet__logo {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 16px;
+    font-size: 2.6rem;
+  }
+
+  .gruppo-sheet__titolo {
+    margin-bottom: 6px;
+    font-size: 2rem;
+  }
+
+  .gruppo-sheet__sotto {
+    font-size: 0.95rem;
+  }
+
+  .gruppo-sheet__info {
+    display: block;
+    max-width: 420px;
+    margin: 0 0 22px;
+  }
+
+  .gruppo-sheet__bottone {
+    max-width: 520px;
+  }
+}
