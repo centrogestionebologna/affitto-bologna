@@ -5,19 +5,22 @@ import { auth } from "../firebase";
 const VUOTO = {
   firstName: "",
   lastName: "",
+  email: "",
   phone: "",
   accountType: "homeSeeker",
 };
 
+const EMAIL_VALIDA = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
+  // Con l'accesso Google l'email è già nota: il campo serve solo se manca
+  const emailAutomatica = auth.currentUser?.email || "";
+
   const [f, setF] = useState(() => {
     const stato = { ...VUOTO };
 
     Object.keys(VUOTO).forEach((chiave) => {
-      if (
-        iniziale[chiave] !== undefined &&
-        iniziale[chiave] !== null
-      ) {
+      if (iniziale[chiave] !== undefined && iniziale[chiave] !== null) {
         stato[chiave] = iniziale[chiave];
       }
     });
@@ -49,8 +52,16 @@ function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
       return setErrore("Inserisci il tuo cognome.");
     }
 
-    if (f.phone.replace(/\D/g, "").length < 6) {
-      return setErrore("Inserisci un numero di telefono valido.");
+    if (!emailAutomatica && !EMAIL_VALIDA.test(f.email.trim())) {
+      return setErrore("Inserisci un indirizzo email valido.");
+    }
+
+    const telefono = f.phone.trim();
+
+    if (telefono && telefono.replace(/\D/g, "").length < 6) {
+      return setErrore(
+        "Il numero di telefono non sembra valido: correggilo oppure lascia il campo vuoto."
+      );
     }
 
     setInvio(true);
@@ -59,8 +70,9 @@ function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
       await onSubmit({
         firstName: f.firstName.trim(),
         lastName: f.lastName.trim(),
-        phone: f.phone.trim(),
+        phone: telefono,
         accountType: f.accountType,
+        ...(emailAutomatica ? {} : { email: f.email.trim() }),
       });
     } catch (error) {
       console.error(error);
@@ -74,7 +86,7 @@ function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
     <form onSubmit={invia} noValidate>
       <div className="griglia-campi">
         <div className="campo">
-          <label htmlFor="pf-nome">Nome</label>
+          <label htmlFor="pf-nome">Nome *</label>
 
           <input
             id="pf-nome"
@@ -85,7 +97,7 @@ function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
         </div>
 
         <div className="campo">
-          <label htmlFor="pf-cognome">Cognome</label>
+          <label htmlFor="pf-cognome">Cognome *</label>
 
           <input
             id="pf-cognome"
@@ -95,19 +107,22 @@ function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
           />
         </div>
 
-        <div className="campo">
-          <label htmlFor="pf-email">Email</label>
+        {!emailAutomatica && (
+          <div className="campo">
+            <label htmlFor="pf-email">Email *</label>
 
-          <input
-            id="pf-email"
-            type="text"
-            value={auth.currentUser?.email || ""}
-            readOnly
-          />
-        </div>
+            <input
+              id="pf-email"
+              type="text"
+              inputMode="email"
+              autoComplete="email"
+              {...campo("email")}
+            />
+          </div>
+        )}
 
         <div className="campo">
-          <label htmlFor="pf-tel">Telefono</label>
+          <label htmlFor="pf-tel">Telefono (facoltativo)</label>
 
           <input
             id="pf-tel"
@@ -115,12 +130,16 @@ function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
             autoComplete="tel"
             {...campo("phone")}
           />
+
+          <small className="campo__nota">
+            Se non lo inserisci, nelle richieste di contatto verrà mostrata
+            solo la tua email, senza il numero di telefono. Potrai aggiungerlo
+            o modificarlo in seguito dal tuo profilo.
+          </small>
         </div>
 
         <div className="campo">
-          <label htmlFor="pf-tipo">
-            Cosa fai su Affitto Bologna
-          </label>
+          <label htmlFor="pf-tipo">Cosa fai su Affitto Bologna</label>
 
           <select id="pf-tipo" {...campo("accountType")}>
             <option value="homeSeeker">Cerco casa</option>
@@ -131,14 +150,13 @@ function FormProfilo({ iniziale = {}, onSubmit, etichetta = "Salva" }) {
       </div>
 
       <p className="tenue">
-        Il cognome completo, il telefono e l’email restano privati.
-        Agli altri utenti viene mostrato solamente il nome con
+        Il cognome completo, il telefono e l’email restano privati: chi ha
+        pubblicato un annuncio li vede solo se approva una tua richiesta di
+        contatto. Agli altri utenti viene mostrato solamente il nome con
         l’iniziale del cognome.
       </p>
 
-      {errore && (
-        <p className="alert alert--errore">{errore}</p>
-      )}
+      {errore && <p className="alert alert--errore">{errore}</p>}
 
       <button
         type="submit"

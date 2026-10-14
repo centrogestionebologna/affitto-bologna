@@ -199,7 +199,7 @@ export async function inviaSegnalazione(annuncio, tipo, motivo, dettagli) {
 export async function salvaProfilo(dati) {
   const utente = auth.currentUser;
   const ref = doc(db, "users", utente.uid);
-  const { phone, ...pubblici } = dati;
+  const { phone, email, ...pubblici } = dati;
   const snap = await getDoc(ref);
 
 if (snap.exists()) {
@@ -228,7 +228,7 @@ if (snap.exists()) {
 
   await setDoc(
     doc(db, "userContacts", utente.uid),
-    { phone, email: utente.email || "" },
+    { phone: phone || "", email: utente.email || email || "" },
     { merge: true }
   );
 }

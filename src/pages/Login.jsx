@@ -3,6 +3,7 @@ import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 
 import { auth, db } from "../firebase";
+import AnteprimaChat from "../components/AnteprimaChat";
 
 function Login() {
   const [caricamento, setCaricamento] = useState(false);
@@ -51,23 +52,11 @@ function Login() {
   };
 
   return (
-    <div className="login">
-      <div className="login__box">
-        <h1>Affitto Bologna</h1>
-        <p>Stanze, appartamenti e coinquilini per studenti e lavoratori.</p>
-
-        <button
-          type="button"
-          className="btn btn--primario btn--blocco"
-          onClick={loginGoogle}
-          disabled={caricamento}
-        >
-          {caricamento ? "Accesso in corso..." : "Accedi con Google"}
-        </button>
-
-        {errore && <p className="alert alert--errore">{errore}</p>}
-      </div>
-    </div>
+    <AnteprimaChat
+      onAccedi={loginGoogle}
+      caricamento={caricamento}
+      errore={errore}
+    />
   );
 }
 

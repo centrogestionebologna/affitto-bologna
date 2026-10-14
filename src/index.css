@@ -1933,3 +1933,340 @@ html.chat-attiva body {
   background: #fff;
   color: var(--fav);
 }
+
+/* ===== Schermata di accesso: chat sfocata + riquadro tipo gruppo WhatsApp ===== */
+.anteprima {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  background: var(--sfondo);
+}
+
+.anteprima__chat {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.anteprima__contenuto {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  filter: blur(6px);
+  transform: scale(1.04);
+  pointer-events: none;
+  user-select: none;
+}
+
+.anteprima__velo {
+  position: absolute;
+  inset: 0;
+  background: rgba(11, 20, 26, 0.45);
+}
+
+.gruppo-sheet {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 620px;
+  min-height: min(58%, 440px);
+  margin: 0 auto;
+  padding: 34px 22px 22px;
+  border-radius: 28px 28px 0 0;
+  background: #151c21;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.35);
+  color: #fff;
+  text-align: center;
+}
+
+.gruppo-sheet__logo {
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+  margin-bottom: 18px;
+  overflow: hidden;
+  border-radius: 50%;
+  background: #fff;
+  font-size: 2.6rem;
+}
+
+.gruppo-sheet__logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gruppo-sheet__titolo {
+  margin: 0 0 6px;
+  color: #fff;
+  font-family: var(--font-titoli);
+  font-size: clamp(1.6rem, 6.5vw, 2.2rem);
+  letter-spacing: 0.01em;
+}
+
+.gruppo-sheet__sotto {
+  margin: 0 0 8px;
+  color: #9fb0b8;
+  font-size: 0.95rem;
+}
+
+.gruppo-sheet__info {
+  max-width: 420px;
+  margin: 0 0 22px;
+  color: #c5d0d6;
+  font-size: 0.9rem;
+}
+
+.gruppo-sheet__errore {
+  max-width: 420px;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(198, 47, 47, 0.2);
+  color: #ffb4b4;
+  font-size: 0.85rem;
+}
+
+.gruppo-sheet__bottone {
+  width: 100%;
+  max-width: 520px;
+  min-height: 54px;
+  margin-top: auto;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: #21c063;
+  color: #0b141a;
+  font: 700 1.05rem var(--font-testo);
+  cursor: pointer;
+}
+
+.gruppo-sheet__bottone:hover:not(:disabled) {
+  background: #2bd470;
+}
+
+.gruppo-sheet__bottone:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.gruppo-sheet__bottone:focus-visible {
+  outline: 3px solid var(--saffron);
+  outline-offset: 3px;
+}
+
+.gruppo-sheet__bottone--pulsa {
+  animation: pulsa-bottone 0.9s ease;
+}
+
+@keyframes pulsa-bottone {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(33, 192, 99, 0);
+  }
+  40% {
+    transform: scale(1.04);
+    box-shadow: 0 0 0 10px rgba(33, 192, 99, 0.35);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gruppo-sheet__bottone--pulsa {
+    animation-duration: 0.1s;
+  }
+}
+
+/* Barra in basso per gli utenti non registrati */
+.anteprima__bar {
+  flex: 0 0 auto;
+  z-index: 2;
+}
+
+.anteprima__finto {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 46px;
+  padding: 0 16px;
+  overflow: hidden;
+  border: 1px solid var(--bordo);
+  border-radius: 24px;
+  background: var(--carta);
+  color: var(--tenue);
+  font: 400 0.95rem var(--font-testo);
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.anteprima__finto:focus-visible {
+  outline: 3px solid var(--primario-chiaro);
+  border-color: var(--primario);
+}
+
+/* Menu per gli utenti non registrati */
+.menu-navigazione--ospite .menu-navigazione__pannello {
+  width: min(340px, calc(100vw - 20px));
+}
+
+button.menu-navigazione__voce {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: 600 1rem var(--font-testo);
+  text-align: left;
+  cursor: pointer;
+}
+
+.pillola-blocco {
+  flex: 0 0 auto;
+  padding: 3px 10px;
+  border: 1px solid var(--bordo);
+  border-radius: 999px;
+  background: #eef1ef;
+  color: var(--tenue);
+  font-size: 0.66rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Nota sotto un campo del form */
+.campo__nota {
+  color: var(--tenue);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+/* ===== Schermata di accesso: versione compatta ===== */
+.anteprima__contenuto {
+  filter: blur(4px);
+  transform: scale(1.03);
+}
+
+.anteprima__velo {
+  background: rgba(11, 20, 26, 0.3);
+}
+
+.anteprima__contenuto .chat__lista {
+  padding-bottom: 34px;
+}
+
+/* Il riquadro sta sotto i messaggi, così restano visibili */
+.gruppo-sheet {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  left: auto;
+  flex: 0 0 auto;
+  align-self: center;
+  align-items: stretch;
+  width: 100%;
+  min-height: 0;
+  max-width: 620px;
+  margin: -26px auto 0;
+  padding: 16px 16px 14px;
+  text-align: left;
+}
+
+.gruppo-sheet__intestazione {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.gruppo-sheet__logo {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 64px;
+  margin: 0;
+  font-size: 1.8rem;
+}
+
+.gruppo-sheet__testi {
+  min-width: 0;
+}
+
+.gruppo-sheet__titolo {
+  margin: 0 0 2px;
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+
+.gruppo-sheet__sotto {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
+.gruppo-sheet__info {
+  display: none;
+}
+
+.gruppo-sheet__errore {
+  max-width: none;
+  margin: 0 0 10px;
+}
+
+.gruppo-sheet__bottone {
+  max-width: none;
+  min-height: 48px;
+  margin-top: 0;
+  font-size: 1rem;
+}
+
+/* Tablet e desktop: riquadro centrato, più grande */
+@media (min-width: 720px) {
+  .gruppo-sheet {
+    align-items: center;
+    padding: 28px 24px 22px;
+    text-align: center;
+  }
+
+  .gruppo-sheet__intestazione {
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  .gruppo-sheet__logo {
+    width: 112px;
+    height: 112px;
+    margin-bottom: 16px;
+    font-size: 2.6rem;
+  }
+
+  .gruppo-sheet__titolo {
+    margin-bottom: 6px;
+    font-size: 2rem;
+  }
+
+  .gruppo-sheet__sotto {
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+  }
+
+  .gruppo-sheet__info {
+    display: block;
+    margin: 0 0 20px;
+  }
+
+  .gruppo-sheet__bottone {
+    max-width: 520px;
+  }
+}

@@ -117,8 +117,8 @@ function Recensioni({ userId, puoiRecensire }) {
           {recensioni.map((r) => (
             <article className="recensione" key={r.id}>
               <div>
-                reviewerName: nomeCorrente(),{" "}
-                <Stelle valore={r.rating} />
+  <strong>{abbreviaNomeCompleto(r.reviewerName)}</strong>{" "}
+                  <Stelle valore={r.rating} />
               </div>
               {r.comment && <p>{r.comment}</p>}
               {r.createdAt?.toDate && (
